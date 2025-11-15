@@ -1,0 +1,89 @@
+[
+    {
+        "name": "Alice",
+        "preferences": [
+            "Science & Technology",
+            "Culture & Entertainment"
+        ],
+        "age": 23,
+        "gender": "female",
+        "location": "urban",
+        "engagements": [
+            "Culture & Entertainment Article 13",
+            "Culture & Entertainment Article 6",
+            "Science & Technology Article 5",
+            "Science & Technology Article 16",
+            "Science & Technology Article 8",
+            "Sports Article 8",
+            "Sports Article 4",
+            "Science & Technology Article 9",
+            "Opinion & General News Article 2",
+            "Science & Technology Article 18",
+            "Health & Wellness Article 17",
+            "Science & Technology Article 17",
+            "World & International Affairs Article 2",
+            "Science & Technology Article 6",
+            "Health & Wellness Article 5",
+            "Science & Technology Article 20",
+            "World & International Affairs Article 1",
+            "Health & Wellness Article 7",
+            "Culture & Entertainment Article 17",
+            "Politics & Law Article 11"
+        ]
+    },
+    {
+        "name": "Bob",
+        "preferences": {
+            "categories": [
+                "Health & Wellness",
+                "Sports"
+            ],
+            "metadata": {
+                "Length": 0.8,
+                "Complexity": 0.5
+            },
+            "static_metadata_conf": {
+                "Length": true,
+                "Complexity": true,
+                "Tone": false,
+                "Content Type": false,
+                "Named Entities": false
+            }
+        },
+        "age": 16,
+        "gender": "male",
+        "location": "suburban"
+    },
+    {
+        "name": "Carol",
+        "preferences": [
+            "Economy & Business",
+            "Politics & Law"
+        ],
+        "age": 62,
+        "gender": "female",
+        "location": "rural",
+        "engagements": [
+            "Health & Wellness Article 5",
+            "Sports Article 8",
+            "Politics & Law Article 11",
+            "Health & Wellness Article 17",
+            "Economy & Business Article 3",
+            "Economy & Business Article 17",
+            "Culture & Entertainment Article 6",
+            "Economy & Business Article 13",
+            "Economy & Business Article 11",
+            "Politics & Law Article 4",
+            "Culture & Entertainment Article 13",
+            "Economy & Business Article 12",
+            "Politics & Law Article 10",
+            "Opinion & General News Article 2",
+            "Sports Article 4",
+            "Economy & Business Article 19",
+            "Politics & Law Article 8",
+            "Science & Technology Article 5",
+            "Economy & Business Article 14",
+            "Economy & Business Article 8"
+        ]
+    }
+]

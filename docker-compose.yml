@@ -1,0 +1,67 @@
+# docker-compose.yml (Using ankane/pgvector image)
+version: "3.8"
+
+services:
+  backend:
+    build: . # Build the image from the Dockerfile in the current directory
+    container_name: fastapi_backend
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    volumes:
+      - .:/app # Mount current directory to /app in container for live code reload
+    environment:
+      - DATABASE_URL=postgresql://news_user:12345678@db:5432/news_db
+      # Add other environment variables your app needs
+    depends_on:
+      db:
+        condition: service_healthy # Wait for the DB to be ready
+    networks:
+      - app_network
+  db:
+    image: pgvector/pgvector:0.8.0-pg17
+    container_name: postgres_pgvector_db
+    environment:
+      POSTGRES_USER: news_user
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: news_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U news_user -d news_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama_server
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./init_ollama.sh:/init_ollama.sh
+    entrypoint: /bin/sh
+    command: /init_ollama.sh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    networks:
+      - app_network
+
+volumes:
+  postgres_data: # Define a named volume for data persistence
+  ollama_data:
+
+networks:
+  app_network:
+    driver: bridge

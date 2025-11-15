@@ -1,0 +1,122 @@
+[users]
+*id: UUID
+email: TEXT
+hashed_password: TEXT
+name: TEXT
+preferences: VECTOR
+created_at: TIMESTAMP
+
+[articles]
+*id: UUID
+title: TEXT
+content: TEXT
+source_url: TEXT
+publisher: TEXT
+published_at: TIMESTAMP
+language: TEXT
+scraped_at: TIMESTAMP
+category_scores: VECTOR
+metadata: JSONB
+
+[categories]
+*id: SERIAL
+name: TEXT
+
+[article_reads]
+*user_id: UUID
+*article_id: UUID
+read_at: TIMESTAMP
+
+[synthesized_articles]
+*id: UUID
+title: TEXT
+content: TEXT
+generated_at: TIMESTAMP
+generation_prompt: TEXT
+notes: TEXT
+
+[synthesized_sources]
+*synthesized_id: UUID
+*article_id: UUID
+
+[daily_summaries]
+*id: UUID
+user_id: UUID
+article_ids: UUID[]
+summary_generated_at: TIMESTAMP
+
+article_reads.user_id > users.id
+article_reads.article_id > articles.id
+synthesized_sources.synthesized_id > synthesized_articles.id
+synthesized_sources.article_id > articles.id
+daily_summaries.user_id > users.id
+
+
+
+
+
+
+
+
+############################################################################################# UPDATED ##########################################
+
+Articles(
+    id: UUID,
+    title: STR,
+    timestamp: DATE,
+    url: STR,
+    categories vector: VECTOR,
+    text: STR,
+    publisher: STR,
+
+    PK -> id
+)
+
+Users(
+    id: UUID,
+    name: STR,
+    mail: STR,
+    birthdate: DATE,
+    location: ENUM,
+    gender: ENUM,
+    preferences: LIST[categories],
+    interests: VECTOR,
+    hashed_password: STR,
+    created_at: TIMESTAMP
+    
+    PK -> id
+)
+
+Likes(
+    article_id: UUID,
+    user_id: UUID,
+    like: BOOL,
+
+    PK -> article_id (Genreted_articles.id), user_id (users.id)
+    FK -> Genreted_articles.article_id, users.user_id
+)
+
+Genreted_articles(
+    id: UUID,
+    title: STR,
+    timestamp: DATE,
+    categories vector: VECTOR,
+    text: STR
+
+    PK -> id
+)
+
+Generated_from_Source(
+    source_id: UUID
+    gen_id: UUID
+
+    PK -> source_id (Articles.id), gen_id (Genreted_articles.id)
+    FK -> source_id (Articles.id), gen_id (Genreted_articles.id)
+)
+
+
+
+
+
+
+
