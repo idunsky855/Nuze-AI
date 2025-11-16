@@ -2,8 +2,9 @@
 set -e # Exit immediately if a command exits with a non-zero status.
 
 
-MODEL_TO_PULL="llama3.2"
-
+# MODEL_TO_PULL="llama3.2"
+# MODEL_TO_PULL="gpt-oss:latest"
+MODEL_TO_PULL="deepseek-r1:latest"
 
 echo "Starting Ollama server in background..."
 # Try to locate the ollama binary in PATH, fallback to common locations
@@ -56,6 +57,50 @@ if ! "$OLLAMA_BIN" list | grep -q "^${MODEL_TO_PULL}"; then
 else
   echo "Model $MODEL_TO_PULL already exists."
 fi
+
+  # Optional: if a Modfile is mounted at /Modfile, attempt to build or extract its SYSTEM prompt
+  if [ -f /news-cls-modfile ]; then
+    echo "Found /news-cls-modfile in container. Attempting to build model from news-cls-modfile (if supported)..."
+    # Do not fail the whole init if build is not supported or fails
+    set +e
+    if "$OLLAMA_BIN" help | grep -q "build"; then
+      echo "ollama supports 'build' — running build against /news-cls-modfile"
+      "$OLLAMA_BIN" build -f /news-cls-modfile || {
+        echo "ollama build failed; continuing and attempting to extract SYSTEM prompt instead."
+      }
+    else
+      echo "ollama 'build' subcommand not available; skipping build step."
+    fi
+
+    # Best-effort: create a named model 'news-classifier' from Modfile if it doesn't already exist
+    if ! "$OLLAMA_BIN" list 2>/dev/null | grep -q "^news-classifier"; then
+      echo "Creating Ollama model 'news-classifier' from /news-cls-modfile (best-effort)"
+      "$OLLAMA_BIN" create news-classifier -f /news-cls-modfile 2>/dev/null || {
+        echo "ollama create failed or not supported; continuing startup."
+      }
+    else
+      echo "Model 'news-classifier' already exists."
+    fi
+
+    # Attempt to extract the SYSTEM block from Modfile to a persistent location for later use
+    # Extract lines between a line starting with 'SYSTEM' and the closing triple quotes
+    awk 'BEGIN{in=0} /^SYSTEM[[:space:]]*"""/ {in=1; next} /^"""[[:space:]]*$/ {in=0; exit} in{print}' /news-cls-modfile > /root/.ollama/modfile_system_prompt.txt 2>/dev/null || true
+    if [ -s /root/.ollama/modfile_system_prompt.txt ]; then
+      echo "Extracted SYSTEM prompt to /root/.ollama/modfile_system_prompt.txt"
+      # If the ollama CLI exposes a 'system' or 'config' command to set a system prompt, try to use it (best-effort)
+      if "$OLLAMA_BIN" --help 2>&1 | grep -q "system"; then
+        echo "Attempting to apply SYSTEM prompt via 'ollama system' (best-effort)"
+        # Try possible 'system' subcommands (best-effort; do not abort on failure)
+        "$OLLAMA_BIN" system set "$(cat /root/.ollama/modfile_system_prompt.txt)" 2>/dev/null || true
+        "$OLLAMA_BIN" system --set "$(cat /root/.ollama/modfile_system_prompt.txt)" 2>/dev/null || true
+      else
+        echo "No 'system' subcommand found in ollama CLI; SYSTEM prompt persisted to /root/.ollama/modfile_system_prompt.txt"
+      fi
+    else
+      echo "No SYSTEM block found in /news-cls-modfile or extraction failed."
+    fi
+    set -e
+  fi
 
 echo "Initialization complete. Ollama server process (PID: $pid) is running."
 # Wait for the background Ollama server process to terminate
