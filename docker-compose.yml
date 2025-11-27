@@ -9,8 +9,9 @@ services:
       - "8000:8000" # Map host port 8000 to container port 8000
     volumes:
       - .:/app # Mount current directory to /app in container for live code reload
+      - /app/.venv # Prevent host .venv from overwriting container .venv
     environment:
-      - DATABASE_URL=postgresql://news_user:12345678@db:5432/news_db
+      - DATABASE_URL=postgresql+asyncpg://news_user:12345678@db:5432/news_db
       # Add other environment variables your app needs
     depends_on:
       db:

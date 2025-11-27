@@ -1,5 +1,6 @@
 import ollama
 import json
+import time
 from llm_output_validator import validate_output
 
 OLLAMA_HOST = "http://localhost:11434"
@@ -52,29 +53,38 @@ try:
     prompt_filled = PROMPT.replace("{article_text}", article_text)
     
     print("Sending prompt to model...")
+    start_time = time.time()
     response = client.chat(
         model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt_filled}],
         stream=False
     )
-    
+    total_time = time.time() - start_time
+    print('-'*40, '\n')
+    print(f'Interaction took: {total_time} Seconds\n')
+    print('-'*40, '\n')
     raw_response = response.message.content
     print("\n--- Raw Response ---")
     print(raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
     print("--------------------\n")
     
-    # Strip markdown code blocks
-    cleaned = raw_response
-    if cleaned.startswith("```"):
-        lines = cleaned.split("\n")
-        cleaned = "\n".join(lines[1:])
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        cleaned = cleaned.strip()
+    # Strip markdown code blocks and extra text
+    cleaned = raw_response.strip()
+    start = cleaned.find('{')
+    end = cleaned.rfind('}')
+    if start != -1 and end != -1:
+        cleaned = cleaned[start:end+1]
     
     # Parse JSON
     result = json.loads(cleaned)
     
+    # Handle nested "category" dictionary if present
+    if "category" in result and isinstance(result["category"], dict):
+        print("⚠ Found nested 'category' dictionary, flattening...")
+        for k, v in result["category"].items():
+            result[k] = v
+        del result["category"]
+
     # Normalize key names
     if "Named_Entities" in result:
         result["Named Entities"] = result.pop("Named_Entities")
@@ -82,7 +92,7 @@ try:
     print("✓ Successfully parsed JSON")
     print(f"Keys: {list(result.keys())}\n")
     
-    # Normalize category scores if needed
+    # Define categories explicitly
     categories = [
         "Politics & Law", "Economy & Business", "Science & Technology",
         "Health & Wellness", "Education & Society", "Culture & Entertainment",
@@ -90,6 +100,7 @@ try:
         "Opinion & General News"
     ]
     
+    # Normalize category scores if needed
     cat_scores = [result.get(k, 0) for k in categories]
     total = sum(cat_scores)
     
@@ -97,23 +108,24 @@ try:
         print(f"\n⚠ Category sum is {total}, normalizing to 5.0...")
         if total > 0:
             for k in categories:
-                result[k] = round(result.get(k, 0) * 5.0 / total, 2)
+                # Update only if key exists or if we want to force it
+                if k in result or result.get(k, 0) > 0:
+                    result[k] = round(result.get(k, 0) * 5.0 / total, 2)
         # Verify after normalization
         new_total = sum(result.get(k, 0) for k in categories)
         print(f"After normalization: {new_total}")
     
     # Validate
-    is_valid, errors = validate_output(result)
+    is_valid, error_msg = validate_output(result)
     if is_valid:
         print("✓ VALIDATION PASSED!")
         print(json.dumps(result, indent=2))
     else:
         print(f"✗ Validation failed:")
-        for error in errors:
-            print(f"  - {error}")
+        print(f"  - {error_msg}")
         
         # Show category scores
-        categories = [k for k in result.keys() if k not in ["Length", "Complexity", "Tone", "Content_type", "Named Entities"]]
+        # Re-calculate total based on explicit categories to avoid TypeErrors with unexpected keys
         total = sum(result.get(k, 0) for k in categories)
         print(f"\nCategory scores sum: {total} (need 5.0)")
         print("Scores:")

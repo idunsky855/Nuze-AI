@@ -1,4 +1,4 @@
-FROM phi4:latest
+FROM llama3.2:latests
 
 PARAMETER temperature 0.2
 PARAMETER top_p 0.9

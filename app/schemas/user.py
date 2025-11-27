@@ -1,0 +1,25 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from uuid import UUID
+
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+    name: Optional[str] = None
+
+class UserLogin(UserBase):
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_id: UUID
+
+class UserResponse(UserBase):
+    id: UUID
+    name: Optional[str] = None
+    
+    class Config:
+        from_attributes = True

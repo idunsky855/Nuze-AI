@@ -1,0 +1,51 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
+
+from app.database import get_db
+from app.schemas.preferences import PreferencesUpdate, PreferencesResponse
+from app.services.user_service import UserService
+from app.utils.security import settings
+from jose import jwt, JWTError
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+async def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        return user_id
+    except JWTError:
+        raise credentials_exception
+
+router = APIRouter(prefix="/me", tags=["users"])
+
+@router.get("/preferences", response_model=PreferencesResponse)
+async def get_preferences(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    user_service = UserService(db)
+    prefs = await user_service.get_user_preferences(user_id)
+    return {"interests_vector": prefs}
+
+@router.post("/preferences", response_model=PreferencesResponse)
+async def update_preferences(
+    prefs_in: PreferencesUpdate,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    if not prefs_in.interests_vector:
+        raise HTTPException(status_code=400, detail="No preferences provided")
+        
+    user_service = UserService(db)
+    updated_prefs = await user_service.update_user_preferences(user_id, prefs_in.interests_vector)
+    return {"interests_vector": updated_prefs}

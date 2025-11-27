@@ -1,16 +1,17 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
 # Set the working directory in the container
 WORKDIR /app
 
 # Copy the dependencies file to the working directory
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 
-# Install any needed dependencies specified in requirements.txt
-# --no-cache-dir reduces image size, --upgrade pip ensures latest pip
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+RUN uv sync --frozen --no-install-project
 
 # Copy the rest of the application code into the container
 COPY . .
@@ -18,7 +19,6 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run the application using uvicorn
+# Command to run the application using uvicorn via uv run
 # Use 0.0.0.0 to make it accessible from outside the container
-# --reload is useful for development, remove for production
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

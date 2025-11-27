@@ -2,9 +2,11 @@
 set -e # Exit immediately if a command exits with a non-zero status.
 
 
-# MODEL_TO_PULL="llama3.2"
-# MODEL_TO_PULL="gpt-oss:latest"
-MODEL_TO_PULL="deepseek-r1:latest"
+MODEL_TO_PULL="llama3.2"                  # 3 Seconds
+# MODEL_TO_PULL="llama3.1:8b"             # 17 Seconds 
+# MODEL_TO_PULL="gpt-oss:latest"        
+# MODEL_TO_PULL="deepseek-r1:latest"      # 142 seconds - Didn't work properly
+# MODEL_TO_PULL="phi4:latest"             # 10 seconds
 
 echo "Starting Ollama server in background..."
 # Try to locate the ollama binary in PATH, fallback to common locations

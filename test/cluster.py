@@ -47,7 +47,7 @@ def group_articles_by_size(
     if total == 0:
         return []
 
-    vectors = [a["categories"] for a in articles]
+    vectors = [a["categories"][:10] for a in articles]
     ids = [a["id"] for a in articles]
 
     # how many clusters do we need?
@@ -81,7 +81,7 @@ def group_articles_by_size(
 # ---- example usage ---- #
 
 if __name__ == "__main__":
-    articles = load_articles("../experiments/articles.json")
+    articles = load_articles("experiments/articles.json")
 
     # num = number of articles per group
     groups = group_articles_by_size(articles, num=5)
