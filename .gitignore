@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypircdocs/
+docs/View_Personalized_News_Feed.png
+.gitignore
+docs/Class_diagram.png
+docs/Receive_Daily_Summary.png
+docs/Select_Interests.png
