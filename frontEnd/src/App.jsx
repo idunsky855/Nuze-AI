@@ -113,7 +113,7 @@ function App() {
   }
 
   if (currentView === 'preferences') {
-    return <Preferences onSave={handleSavePreferences} />
+    return <Preferences onSave={handleSavePreferences} initialPreferences={currentUser} />
   }
 
   if (currentView === 'profile') {

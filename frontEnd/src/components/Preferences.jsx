@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
-const Preferences = ({ onSave }) => {
+const Preferences = ({ onSave, initialPreferences }) => {
     const [preferences, setPreferences] = useState({
-        articleLength: 1, // 0: Short, 1: Random, 2: Long
-        tone: 1,          // 0: Serious, 1: Neutral, 2: Fun
-        updateFrequency: 1 // 0: Low, 1: Medium, 2: High
+        articleLength: initialPreferences?.articleLength !== undefined ? initialPreferences.articleLength : 1, // 0: Short, 1: Random, 2: Long
+        tone: initialPreferences?.tone !== undefined ? initialPreferences.tone : 1,          // 0: Serious, 1: Neutral, 2: Fun
+        updateFrequency: initialPreferences?.updateFrequency !== undefined ? initialPreferences.updateFrequency : 1 // 0: Low, 1: Medium, 2: High
     });
 
     const handleChange = (e) => {
