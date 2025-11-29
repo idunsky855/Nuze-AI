@@ -25,3 +25,10 @@ export const fetchArticles = async () => {
         throw error;
     }
 };
+
+export const recordInteraction = async (articleId, type) => {
+    // Placeholder for API call
+    // await axios.post(`${API_URL}/interactions`, { articleId, type });
+    console.log(`Interaction recorded: ${type} on article ${articleId}`);
+    return Promise.resolve();
+};

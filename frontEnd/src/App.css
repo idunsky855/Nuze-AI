@@ -41,6 +41,15 @@
   background-color: #121212;
   /* Dark card background */
   color: white;
+  transition: background 0.5s ease;
+}
+
+.article-card.like {
+  background: linear-gradient(135deg, #121212 0%, #1b5e20 100%);
+}
+
+.article-card.dislike {
+  background: linear-gradient(135deg, #121212 0%, #b71c1c 100%);
 }
 
 .article-content {
@@ -75,3 +84,59 @@
   color: white;
   font-size: 1.5rem;
 }
+
+.interaction-buttons {
+  position: absolute;
+  right: 20px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.interaction-buttons button {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.interaction-buttons button:hover {
+  transform: scale(1.15);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.interaction-buttons button:active {
+  transform: scale(0.95);
+}
+
+.like-button:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+  /* Green tint on hover */
+  border-color: #4caf50;
+  color: #4caf50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+}
+
+.dislike-button:hover {
+  background-color: rgba(244, 67, 54, 0.2);
+  /* Red tint on hover */
+  border-color: #f44336;
+  color: #f44336;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.4);
+}
+
+/* Optional: Add labels below buttons if needed, or keep minimal */
