@@ -369,10 +369,106 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Preferences Styles */
+.preferences-card {
+  max-width: 500px;
+  width: 90%;
+  background: rgba(30, 30, 30, 0.6);
+  /* Slightly more transparent */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.preferences-subtitle {
+  text-align: center;
+  color: #aaa;
+  margin-bottom: 40px;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.preference-group {
+  margin-bottom: 35px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.preference-group label {
+  display: block;
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #fff;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.slider-container {
+  padding: 0 5px;
+}
+
+.preference-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.preference-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #646cff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.preference-slider::-webkit-slider-thumb:hover {
+  background: #535bf2;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(83, 91, 242, 0.6);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 500;
+  position: relative;
+  padding: 0 2px;
+}
+
+.slider-labels span {
+  transition: color 0.3s ease;
+  cursor: pointer;
+  /* Hint that clicking might work (future enhancement) */
+}
+
+.slider-labels span.active {
+  color: #646cff;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(100, 108, 255, 0.3);
+}
+
 /* Keep error logout button as is or adjust if needed */
 .logout-button.error-logout {
   padding: 8px 16px;
-  background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   border-radius: 20px;

@@ -3,6 +3,7 @@ import './App.css'
 import Article from './components/Article'
 import Login from './components/Login'
 import Signup from './components/Signup'
+import Preferences from './components/Preferences'
 import { fetchArticles } from './api'
 
 function App() {
@@ -12,14 +13,14 @@ function App() {
   const [error, setError] = useState(null)
 
   // User Management State
-  const [currentView, setCurrentView] = useState('login') // 'login', 'signup', 'feed'
+  const [currentView, setCurrentView] = useState('login') // 'login', 'signup', 'preferences', 'feed'
   const [users, setUsers] = useState([
-    { username: 'admin', password: 'admin', firstName: 'Admin', lastName: 'User' }
+    { username: 'admin', password: 'admin', firstName: 'Admin', lastName: 'User', hasPreferences: true }
   ])
   const [currentUser, setCurrentUser] = useState(null)
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && currentView === 'feed') {
       const loadArticles = async () => {
         try {
           const data = await fetchArticles()
@@ -32,7 +33,7 @@ function App() {
       }
       loadArticles()
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, currentView])
 
   const [showMenu, setShowMenu] = useState(false)
 
@@ -41,7 +42,11 @@ function App() {
     if (user) {
       setIsLoggedIn(true)
       setCurrentUser(user)
-      setCurrentView('feed')
+      if (user.hasPreferences) {
+        setCurrentView('feed')
+      } else {
+        setCurrentView('preferences')
+      }
       return true
     }
     return false
@@ -54,12 +59,23 @@ function App() {
       return
     }
 
-    const newUser = { ...userData }
+    const newUser = { ...userData, hasPreferences: false }
     setUsers([...users, newUser])
 
     // Auto login after signup
     setIsLoggedIn(true)
     setCurrentUser(newUser)
+    setCurrentView('preferences')
+  }
+
+  const handleSavePreferences = (prefs) => {
+    // Update current user with preferences
+    const updatedUser = { ...currentUser, ...prefs, hasPreferences: true }
+    setCurrentUser(updatedUser)
+
+    // Update user in users list
+    setUsers(users.map(u => u.username === currentUser.username ? updatedUser : u))
+
     setCurrentView('feed')
   }
 
@@ -77,6 +93,10 @@ function App() {
       return <Signup onSignup={handleSignup} onSwitchToLogin={() => setCurrentView('login')} />
     }
     return <Login onLogin={handleLogin} onSwitchToSignup={() => setCurrentView('signup')} />
+  }
+
+  if (currentView === 'preferences') {
+    return <Preferences onSave={handleSavePreferences} />
   }
 
   if (loading) {
