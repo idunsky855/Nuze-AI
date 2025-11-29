@@ -131,7 +131,7 @@ function App() {
         {showMenu && (
           <div className="user-dropdown">
             <div className="menu-header">
-              <span className="menu-username">{currentUser?.firstName}</span>
+              <span className="menu-username">{currentUser?.username}</span>
             </div>
             <div className="menu-divider"></div>
             <button onClick={handleLogout} className="menu-item">
