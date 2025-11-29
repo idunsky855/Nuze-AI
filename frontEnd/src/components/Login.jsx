@@ -8,7 +8,7 @@ const Login = ({ onLogin }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (username === 'admin' && password === 'admin') {
-            onLogin();
+            onLogin(username);
         } else {
             setError('Invalid username or password');
         }
