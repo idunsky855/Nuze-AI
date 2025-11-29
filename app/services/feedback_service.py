@@ -31,7 +31,7 @@ class FeedbackService:
         result = await self.db.execute(select(Article).where(Article.id == article_id))
         article = result.scalar_one_or_none()
         
-        if not article or not article.category_scores:
+        if not article or article.category_scores is None:
             return
             
         article_vec = [float(x) for x in article.category_scores]

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS articles (
     published_at TIMESTAMP,
     language TEXT DEFAULT 'en',
     scraped_at TIMESTAMP DEFAULT NOW(),
-    category_scores VECTOR(20),
+    category_scores VECTOR(10),
     metadata JSONB
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
     name TEXT,
-    preferences VECTOR(20),
+    preferences VECTOR(10),
     created_at TIMESTAMP DEFAULT NOW()
 );
 
