@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import Article from './components/Article'
 import Login from './components/Login'
+import Signup from './components/Signup'
 import { fetchArticles } from './api'
 
 function App() {
@@ -9,6 +10,13 @@ function App() {
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // User Management State
+  const [currentView, setCurrentView] = useState('login') // 'login', 'signup', 'feed'
+  const [users, setUsers] = useState([
+    { username: 'admin', password: 'admin', firstName: 'Admin', lastName: 'User' }
+  ])
+  const [currentUser, setCurrentUser] = useState(null)
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -27,23 +35,48 @@ function App() {
   }, [isLoggedIn])
 
   const [showMenu, setShowMenu] = useState(false)
-  const [username, setUsername] = useState('')
 
-  const handleLogin = (user) => {
+  const handleLogin = (username, password) => {
+    const user = users.find(u => u.username === username && u.password === password)
+    if (user) {
+      setIsLoggedIn(true)
+      setCurrentUser(user)
+      setCurrentView('feed')
+      return true
+    }
+    return false
+  }
+
+  const handleSignup = (userData) => {
+    // Check if username exists
+    if (users.some(u => u.username === userData.username)) {
+      alert('Username already exists')
+      return
+    }
+
+    const newUser = { ...userData }
+    setUsers([...users, newUser])
+
+    // Auto login after signup
     setIsLoggedIn(true)
-    setUsername(user)
+    setCurrentUser(newUser)
+    setCurrentView('feed')
   }
 
   const handleLogout = () => {
     setIsLoggedIn(false)
+    setCurrentUser(null)
     setArticles([])
     setLoading(true)
     setShowMenu(false)
-    setUsername('')
+    setCurrentView('login')
   }
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />
+    if (currentView === 'signup') {
+      return <Signup onSignup={handleSignup} onSwitchToLogin={() => setCurrentView('login')} />
+    }
+    return <Login onLogin={handleLogin} onSwitchToSignup={() => setCurrentView('signup')} />
   }
 
   if (loading) {
@@ -78,7 +111,7 @@ function App() {
         {showMenu && (
           <div className="user-dropdown">
             <div className="menu-header">
-              <span className="menu-username">{username}</span>
+              <span className="menu-username">{currentUser?.firstName}</span>
             </div>
             <div className="menu-divider"></div>
             <button onClick={handleLogout} className="menu-item">

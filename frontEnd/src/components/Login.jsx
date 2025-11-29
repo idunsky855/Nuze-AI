@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, onSwitchToSignup }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (username === 'admin' && password === 'admin') {
-            onLogin(username);
-        } else {
+        const success = onLogin(username, password);
+        if (!success) {
             setError('Invalid username or password');
         }
     };
@@ -41,6 +40,13 @@ const Login = ({ onLogin }) => {
                     </div>
                     {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="login-button">Login</button>
+
+                    <div className="auth-switch">
+                        <p>Don't have an account?</p>
+                        <button type="button" className="switch-button" onClick={onSwitchToSignup}>
+                            Sign up here
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
