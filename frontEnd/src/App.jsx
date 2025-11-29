@@ -15,8 +15,6 @@ function App() {
         setArticles(data)
       } catch (err) {
         setError('Failed to load articles')
-        // For demo purposes if API fails, we could load mock data here if desired, 
-        // but for now we show error.
       } finally {
         setLoading(false)
       }
@@ -25,16 +23,27 @@ function App() {
     loadArticles()
   }, [])
 
-  return (
-    <div className="App">
-      <h1>Nuze Articles</h1>
-      {loading && <p>Loading articles...</p>}
-      {error && <p className="error">{error}</p>}
-      <div className="article-list">
-        {articles.map((article, index) => (
-          <Article key={article.id || index} article={article} />
-        ))}
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <p>Loading articles...</p>
       </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="app-container">
+      {articles.map((article, index) => (
+        <Article key={article.id || index} article={article} />
+      ))}
     </div>
   )
 }

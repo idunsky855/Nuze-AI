@@ -2,10 +2,15 @@ import React from 'react';
 
 const Article = ({ article }) => {
     return (
-        <div className="article-card" style={{ border: '1px solid #ccc', padding: '16px', margin: '16px 0', borderRadius: '8px' }}>
-            <h2>{article.title}</h2>
-            <p>{article.content}</p>
-            {article.author && <small>By {article.author}</small>}
+        <div className="article-card">
+            <div className="article-content">
+                <h2 className="article-title">{article.title}</h2>
+                <p className="article-body">{article.content}</p>
+                <div className="article-meta">
+                    {article.author && <span>By {article.author}</span>}
+                    {article.published_at && <span> • {new Date(article.published_at).toLocaleDateString()}</span>}
+                </div>
+            </div>
         </div>
     );
 };
