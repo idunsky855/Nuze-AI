@@ -4,6 +4,7 @@ import Article from './components/Article'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import Preferences from './components/Preferences'
+import Profile from './components/Profile'
 import { fetchArticles } from './api'
 
 function App() {
@@ -13,7 +14,7 @@ function App() {
   const [error, setError] = useState(null)
 
   // User Management State
-  const [currentView, setCurrentView] = useState('login') // 'login', 'signup', 'preferences', 'feed'
+  const [currentView, setCurrentView] = useState('login') // 'login', 'signup', 'preferences', 'feed', 'profile'
   const [users, setUsers] = useState([
     { username: 'admin', password: 'admin', firstName: 'Admin', lastName: 'User', hasPreferences: true }
   ])
@@ -79,6 +80,22 @@ function App() {
     setCurrentView('feed')
   }
 
+  const handleUpdateProfile = (updatedData) => {
+    const updatedUser = { ...currentUser, ...updatedData }
+    setCurrentUser(updatedUser)
+    setUsers(users.map(u => u.username === currentUser.username ? updatedUser : u))
+  }
+
+  const handleChangePassword = (currentPassword, newPassword) => {
+    if (currentUser.password !== currentPassword) {
+      return false
+    }
+    const updatedUser = { ...currentUser, password: newPassword }
+    setCurrentUser(updatedUser)
+    setUsers(users.map(u => u.username === currentUser.username ? updatedUser : u))
+    return true
+  }
+
   const handleLogout = () => {
     setIsLoggedIn(false)
     setCurrentUser(null)
@@ -97,6 +114,17 @@ function App() {
 
   if (currentView === 'preferences') {
     return <Preferences onSave={handleSavePreferences} />
+  }
+
+  if (currentView === 'profile') {
+    return (
+      <Profile
+        user={currentUser}
+        onUpdateProfile={handleUpdateProfile}
+        onChangePassword={handleChangePassword}
+        onCancel={() => setCurrentView('feed')}
+      />
+    )
   }
 
   if (loading) {
@@ -134,6 +162,18 @@ function App() {
               <span className="menu-username">{currentUser?.username}</span>
             </div>
             <div className="menu-divider"></div>
+            <button onClick={() => {
+              setShowMenu(false)
+              setCurrentView('profile')
+            }} className="menu-item">
+              Edit Profile
+            </button>
+            <button onClick={() => {
+              setShowMenu(false)
+              setCurrentView('preferences')
+            }} className="menu-item">
+              Preferences
+            </button>
             <button onClick={handleLogout} className="menu-item">
               Logout
             </button>

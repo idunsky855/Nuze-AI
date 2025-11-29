@@ -163,6 +163,8 @@
   max-width: 400px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   text-align: center;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .login-title {
@@ -459,6 +461,90 @@
   transition: color 0.3s ease;
   cursor: pointer;
   /* Hint that clicking might work (future enhancement) */
+}
+
+/* Profile Styles */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: white;
+}
+
+.message {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.message.success {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.message.error {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.password-section-toggle {
+  margin-top: 30px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.toggle-button:hover {
+  color: white;
+}
+
+.password-form {
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.password-form h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #ddd;
+}
+
+.warning-button {
+  background-color: #e67e22;
+}
+
+.warning-button:hover {
+  background-color: #d35400;
 }
 
 .slider-labels span.active {
