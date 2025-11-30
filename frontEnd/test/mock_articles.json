@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "title": "The Future of AI in Healthcare",
+        "content": "Artificial Intelligence is revolutionizing healthcare by enabling early diagnosis and personalized treatment plans. Doctors are now using AI-powered tools to analyze medical images with greater accuracy than ever before.",
+        "author": "Dr. Sarah Smith",
+        "source_url": "https://example.com/ai-healthcare",
+        "published_at": "2023-10-27T10:00:00Z"
+    },
+    {
+        "id": "2",
+        "title": "Sustainable Living: Tips for a Greener Home",
+        "content": "Living sustainably doesn't have to be expensive. Simple changes like using LED bulbs, reducing water waste, and composting can make a significant impact on the environment.",
+        "author": "John Doe",
+        "source_url": "https://example.com/sustainable-living",
+        "published_at": "2023-10-26T14:30:00Z"
+    },
+    {
+        "id": "3",
+        "title": "Top 10 Travel Destinations for 2024",
+        "content": "From the pristine beaches of Bali to the historic streets of Rome, here are the top travel destinations you must visit in 2024. Pack your bags and get ready for an adventure!",
+        "author": "Travel Weekly",
+        "source_url": "https://example.com/travel-2024",
+        "published_at": "2023-10-25T09:15:00Z"
+    },
+    {
+        "id": "4",
+        "title": "Understanding Cryptocurrency: A Beginner's Guide",
+        "content": "Cryptocurrency can be confusing, but it's becoming an integral part of the global economy. This guide breaks down the basics of Bitcoin, Ethereum, and blockchain technology.",
+        "author": "Crypto Expert",
+        "source_url": "https://example.com/crypto-guide",
+        "published_at": "2023-10-24T16:45:00Z"
+    },
+    {
+        "id": "5",
+        "title": "The Benefits of Mindfulness Meditation",
+        "content": "Mindfulness meditation has been shown to reduce stress, improve focus, and enhance emotional well-being. Learn how to incorporate just 10 minutes of practice into your daily routine.",
+        "author": "Wellness Today",
+        "source_url": "https://example.com/mindfulness",
+        "published_at": "2023-10-23T08:00:00Z"
+    }
+]
