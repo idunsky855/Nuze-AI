@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = onLogin(username, password);
-        if (!success) {
-            setError('Invalid username or password');
+        try {
+            await onLogin(email, password);
+        } catch (err) {
+            setError('Invalid email or password');
         }
     };
 
@@ -19,13 +20,14 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                 <h1 className="login-title">Nuze Login</h1>
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="email">Email</label>
                         <input
-                            type="text"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter email"
+                            required
                         />
                     </div>
                     <div className="form-group">
@@ -36,6 +38,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter password"
+                            required
                         />
                     </div>
                     {error && <p className="error-message">{error}</p>}

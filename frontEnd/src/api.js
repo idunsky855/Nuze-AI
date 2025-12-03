@@ -3,23 +3,35 @@ import mockArticles from '../test/mock_articles.json';
 
 const API_URL = 'http://localhost:8000'; // Adjust based on backend URL
 
+// Helper to get token
+const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const login = async (email, password) => {
+    const formData = new FormData();
+    formData.append('username', email); // OAuth2PasswordRequestForm expects 'username'
+    formData.append('password', password);
+
+    const response = await axios.post(`${API_URL}/auth/login`, formData);
+    return response.data;
+};
+
+export const signup = async (userData) => {
+    const response = await axios.post(`${API_URL}/auth/signup`, userData);
+    return response.data;
+};
+
 export const fetchArticles = async () => {
     try {
-        // In a real scenario, this would be:
-        // const response = await axios.get(`${API_URL}/articles`);
+        // Try to hit the real endpoint first
+        // const response = await axios.get(`${API_URL}/feed`, { headers: getAuthHeader() });
         // return response.data;
-
-        // For now, if backend endpoint doesn't exist, we might want to return mock data 
-        // or try to hit the real endpoint. 
-        // The user said "get articles from api", so let's try to hit it.
-        // If it fails, we can handle error in component.
-        // For testing purposes as requested, returning mock data from file
+        
+        // Fallback to mock for now if feed endpoint isn't ready or for testing
         console.log("Fetching mock articles for test...");
         return Promise.resolve(mockArticles);
-
-        // Original API call logic (commented out for now)
-        // const response = await axios.get(`${API_URL}/articles`);
-        // return response.data;
     } catch (error) {
         console.error("Error fetching articles:", error);
         throw error;
@@ -28,7 +40,14 @@ export const fetchArticles = async () => {
 
 export const recordInteraction = async (articleId, type) => {
     // Placeholder for API call
-    // await axios.post(`${API_URL}/interactions`, { articleId, type });
+    // await axios.post(`${API_URL}/interactions`, { articleId, type }, { headers: getAuthHeader() });
     console.log(`Interaction recorded: ${type} on article ${articleId}`);
     return Promise.resolve();
+};
+
+export const initiateUser = async (data) => {
+    const response = await axios.post(`${API_URL}/me/onboarding`, data, {
+        headers: getAuthHeader()
+    });
+    return response.data;
 };

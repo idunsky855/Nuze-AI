@@ -49,3 +49,15 @@ async def update_preferences(
     user_service = UserService(db)
     updated_prefs = await user_service.update_user_preferences(user_id, prefs_in.interests_vector)
     return {"interests_vector": updated_prefs}
+
+from app.schemas.user import UserOnboarding
+
+@router.post("/onboarding", response_model=PreferencesResponse)
+async def onboarding(
+    data: UserOnboarding,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    user_service = UserService(db)
+    updated_prefs = await user_service.initialize_user_vector(user_id, data)
+    return {"interests_vector": updated_prefs}

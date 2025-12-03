@@ -23,3 +23,9 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+
+class UserOnboarding(BaseModel):
+    age: int
+    gender: str
+    location: str
+    preferences: list[str]
