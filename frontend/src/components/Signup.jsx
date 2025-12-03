@@ -34,7 +34,13 @@ const Signup = ({ onSwitchToLogin }) => {
             onSwitchToLogin();
         } catch (err) {
             console.error(err);
-            setError('Signup failed. Please try again.');
+            if (err.response && err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
+            } else if (err.message) {
+                setError(`Signup failed: ${err.message}`);
+            } else {
+                setError('Signup failed. Please try again.');
+            }
         }
     };
 

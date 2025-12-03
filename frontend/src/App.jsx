@@ -156,7 +156,7 @@ function App() {
         
         <Route path="/signup" element={
           !isLoggedIn ? 
-          <Signup onSignup={handleSignup} onSwitchToLogin={() => navigate('/login')} /> : 
+          <Signup onSwitchToLogin={() => navigate('/login')} /> : 
           <Navigate to="/" />
         } />
 
