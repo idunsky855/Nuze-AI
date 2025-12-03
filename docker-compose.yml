@@ -1,6 +1,3 @@
-# docker-compose.yml (Using ankane/pgvector image)
-version: "3.8"
-
 services:
   backend:
     build: . # Build the image from the Dockerfile in the current directory
@@ -18,6 +15,25 @@ services:
         condition: service_healthy # Wait for the DB to be ready
     networks:
       - app_network
+
+  ingestion-cron:
+    build: .
+    container_name: ingestion_cron
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://news_user:12345678@db:5432/news_db
+      - OLLAMA_HOST=http://ollama:11434
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    networks:
+      - app_network
+    command: sh -c "printenv > /etc/environment && cp /app/crontab /tmp/crontab && sed -i 's/\r$//' /tmp/crontab && crontab /tmp/crontab && touch /var/log/cron.log && cron -f"
 
   frontend:
     build: ./frontEnd
@@ -74,8 +90,8 @@ services:
       - app_network
 
 volumes:
-  postgres_data: # Define a named volume for data persistence
-  ollama_data:
+  postgres_data:  # Define a named volume for data persistence
+  ollama_data: 
 
 
 networks:

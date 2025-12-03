@@ -1,7 +1,9 @@
 import asyncio
+import os
 import json
 import ollama
 import traceback
+from datetime import datetime
 from sqlalchemy.future import select
 from app.database import AsyncSessionLocal
 from app.models.article import Article
@@ -10,9 +12,10 @@ from scrapers.new_cnn_scraper import CNNScraper
 from scrapers.new_foxnews_scraper import FoxNewsScraper
 from scrapers.new_nytimes_scraper import NYTimesScraper
 from scrapers.new_sky_news_scraper import SkyNewsScraper
+from app.services.llm_validator import validate_output
 
 class IngestionService:
-    OLLAMA_HOST = "http://localhost:11434"
+    OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     MODEL_NAME = "news-classifier"
     
     PROMPT_TEMPLATE = """Analyze the following article and return the JSON object:
@@ -20,7 +23,7 @@ class IngestionService:
 """
 
     def __init__(self):
-        self.client = ollama.Client(host=self.OLLAMA_HOST)
+        self.client = ollama.Client(host=self.OLLAMA_HOST, timeout=300)
         self.scrapers = [
             BBCScraper(),
             CNNScraper(),
@@ -65,12 +68,37 @@ class IngestionService:
 
                 print(f"Ingesting: {url}")
                 
-                # Ollama Processing
-                ollama_result = self._call_ollama(article_data.get('content', ''))
+                # Ollama Processing with Retry and Validation
+                ollama_result = None
+                for attempt in range(3):
+                    print(f"Ollama attempt {attempt + 1}/3 for {url}")
+                    raw_result = self._call_ollama(article_data.get('content', ''))
+                    
+                    if raw_result:
+                        is_valid, error_msg = validate_output(raw_result)
+                        if is_valid:
+                            ollama_result = raw_result
+                            break
+                        else:
+                            print(f"Validation failed for {url} (Attempt {attempt + 1}): {error_msg}")
+                    else:
+                        print(f"Ollama returned None for {url} (Attempt {attempt + 1})")
                 
                 if not ollama_result:
-                    print(f"Failed to get Ollama result for {url}")
+                    print(f"Failed to get valid Ollama result for {url} after 3 attempts. Skipping.")
                     return
+
+                # Parse published_at
+                published_at = article_data.get('published_at')
+                if isinstance(published_at, str):
+                    try:
+                        # Handle Z suffix for Python 3.10 compatibility
+                        if published_at.endswith('Z'):
+                            published_at = published_at[:-1] + '+00:00'
+                        published_at = datetime.fromisoformat(published_at)
+                    except Exception as e:
+                        print(f"Error parsing date {published_at}: {e}")
+                        published_at = None
 
                 # Create Article
                 article = Article(
@@ -78,9 +106,15 @@ class IngestionService:
                     content=article_data.get('content'),
                     source_url=url,
                     publisher=article_data.get('source'),
-                    published_at=article_data.get('published_at'),
+                    published_at=published_at,
                     category_scores=self._extract_category_scores(ollama_result),
                     metadata_=ollama_result 
+                )
+
+                print(
+                    "DEBUG category_scores type/value:",
+                    type(article.category_scores),
+                    article.category_scores,
                 )
                 
                 db.add(article)
@@ -144,14 +178,14 @@ class IngestionService:
             "Religion & Belief", "Sports", "World & International Affairs",
             "Opinion & General News"
         ]
-        
-        scores = [result.get(k, 0) for k in categories]
-        
-        # Normalize if needed (simple sum check)
+
+        # Force everything to float
+        scores = [float(result.get(k, 0.0)) for k in categories]
+
         total = sum(scores)
         if total > 0 and abs(total - 5.0) > 0.01:
-             scores = [round(s * 5.0 / total, 2) for s in scores]
-             
+            scores = [round(s * 5.0 / total, 4) for s in scores]  # keep more precision
+
         return scores
 
 if __name__ == "__main__":

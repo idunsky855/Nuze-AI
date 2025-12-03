@@ -1,9 +1,12 @@
 import ollama
 import json
 import time
-from llm_output_validator import validate_output
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.services.llm_validator import validate_output
 
-OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_HOST = "http://ollama:11434"
 MODEL_NAME = "news-classifier"
 
 PROMPT = """Analyze the following article and return the JSON object:

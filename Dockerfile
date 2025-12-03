@@ -1,5 +1,8 @@
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim
+FROM python:3.10
+
+# Install system dependencies including cron
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
