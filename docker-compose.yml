@@ -36,12 +36,12 @@ services:
     command: sh -c "printenv > /etc/environment && cp /app/crontab /tmp/crontab && sed -i 's/\r$//' /tmp/crontab && crontab /tmp/crontab && touch /var/log/cron.log && cron -f"
 
   frontend:
-    build: ./frontEnd
+    build: ./frontend
     container_name: react_frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./frontEnd:/app
+      - ./frontend:/app
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
