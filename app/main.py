@@ -6,7 +6,7 @@ from app.database import engine, Base
 from app.routers import auth, users, ingestion, feed, summary, feedback
 
 # Import models to ensure they are registered with Base
-from app.models import user, article, summary as summary_model, interaction
+from app.models import user, article, summary as summary_model, interaction, synthesized_article
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nuze-backend")

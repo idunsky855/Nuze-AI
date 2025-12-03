@@ -76,6 +76,7 @@ services:
       - ollama_data:/root/.ollama
       - ./init_ollama.sh:/init_ollama.sh
       - ./news-cls-modfile:/news-cls-modfile:ro
+      - ./news-combiner-modfile:/news-combiner-modfile:ro
     entrypoint: /bin/sh
     command: /init_ollama.sh
     deploy:

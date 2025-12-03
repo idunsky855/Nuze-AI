@@ -1,0 +1,28 @@
+from sqlalchemy import Column, String, DateTime, func, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import relationship
+from app.database import Base
+import uuid
+
+class SynthesizedArticle(Base):
+    __tablename__ = "synthesized_articles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String)
+    content = Column(Text)
+    generated_at = Column(DateTime(timezone=True), server_default=func.now())
+    generation_prompt = Column(Text)
+    notes = Column(Text)
+    analysis = Column(JSONB) # Storing the full analysis JSON here
+
+    # Relationship to sources
+    sources = relationship("SynthesizedSource", back_populates="synthesized_article")
+
+class SynthesizedSource(Base):
+    __tablename__ = "synthesized_sources"
+
+    synthesized_id = Column(UUID(as_uuid=True), ForeignKey("synthesized_articles.id"), primary_key=True)
+    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True)
+
+    synthesized_article = relationship("SynthesizedArticle", back_populates="sources")
+    # We can add relationship to Article if needed, but for now just the ID is enough

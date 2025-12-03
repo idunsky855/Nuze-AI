@@ -104,6 +104,21 @@ fi
     set -e
   fi
 
+  # Check for news-combiner-modfile and create model if it exists
+  if [ -f /news-combiner-modfile ]; then
+    echo "Found /news-combiner-modfile in container."
+    
+    # Best-effort: create a named model 'news-combiner' from Modfile if it doesn't already exist
+    if ! "$OLLAMA_BIN" list 2>/dev/null | grep -q "^news-combiner"; then
+      echo "Creating Ollama model 'news-combiner' from /news-combiner-modfile"
+      "$OLLAMA_BIN" create news-combiner -f /news-combiner-modfile || {
+        echo "ollama create failed for news-combiner; continuing startup."
+      }
+    else
+      echo "Model 'news-combiner' already exists."
+    fi
+  fi
+
 echo "Initialization complete. Ollama server process (PID: $pid) is running."
 # Wait for the background Ollama server process to terminate
 # This keeps the script running and the container alive
