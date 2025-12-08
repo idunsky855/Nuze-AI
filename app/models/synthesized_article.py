@@ -25,4 +25,3 @@ class SynthesizedSource(Base):
     article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True)
 
     synthesized_article = relationship("SynthesizedArticle", back_populates="sources")
-    # We can add relationship to Article if needed, but for now just the ID is enough
