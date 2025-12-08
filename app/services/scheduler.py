@@ -79,8 +79,10 @@ async def run_daily_ingest():
 
 async def start_scheduler():
     # Schedule jobs
-    # For testing/demo now:
-    scheduler.add_job(run_daily_ingest, 'interval', hours=24)
+    # Schedule jobs
+    # Run daily ingest at 23:00
+    trigger = CronTrigger(hour=23, minute=0)
+    scheduler.add_job(run_daily_ingest, trigger)
 
     scheduler.start()
     logger.info("Scheduler started.")
