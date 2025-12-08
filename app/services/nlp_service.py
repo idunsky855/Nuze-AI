@@ -1,6 +1,9 @@
 import ollama
 from typing import List, Dict
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class NLPService:
     def __init__(self, model_name="news-classifier", host="http://localhost:11434"):
@@ -48,7 +51,7 @@ class NLPService:
             return scores
 
         except Exception as e:
-            print(f"Error classifying article: {e}")
+            logger.error(f"Error classifying article: {e}")
             # Return zero vector on error
             return [0.0] * 10
 
@@ -70,5 +73,5 @@ class NLPService:
             )
             return response.message.content
         except Exception as e:
-            print(f"Error summarizing articles: {e}")
+            logger.error(f"Error summarizing articles: {e}")
             return "Failed to generate summary."

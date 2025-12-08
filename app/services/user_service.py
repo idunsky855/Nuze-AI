@@ -2,6 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.user import User
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserService:
     def __init__(self, db: AsyncSession):
@@ -22,6 +25,7 @@ class UserService:
             user.preferences = preferences
             await self.db.commit()
             await self.db.refresh(user)
+            logger.info(f"Updated preferences for user {user_id}")
             return list(user.preferences)
         return None
         return None

@@ -3,6 +3,7 @@ import os
 import json
 import ollama
 import traceback
+import logging
 from datetime import datetime
 from sqlalchemy.future import select
 from app.database import AsyncSessionLocal
@@ -14,10 +15,12 @@ from scrapers.new_nytimes_scraper import NYTimesScraper
 from scrapers.new_sky_news_scraper import SkyNewsScraper
 from app.services.llm_validator import validate_output
 
+logger = logging.getLogger(__name__)
+
 class IngestionService:
     OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     MODEL_NAME = "news-classifier"
-    
+
     PROMPT_TEMPLATE = """Analyze the following article and return the JSON object:
 {article_text}
 """
@@ -33,19 +36,19 @@ class IngestionService:
         ]
 
     async def run_daily_ingestion(self, dry_run=False):
-        print(f"Starting daily ingestion (Dry Run: {dry_run})...")
-        
+        logger.info(f"Starting daily ingestion (Dry Run: {dry_run})...")
+
         for scraper in self.scrapers:
             try:
                 articles = await scraper.scrape()
-                print(f"Processing {len(articles)} articles from {scraper.__class__.__name__}")
-                
+                logger.info(f"Processing {len(articles)} articles from {scraper.__class__.__name__}")
+
                 for article_data in articles:
                     await self.process_article(article_data, dry_run=dry_run)
-                    
+
             except Exception as e:
-                print(f"Error running scraper {scraper.__class__.__name__}: {e}")
-                traceback.print_exc()
+                logger.error(f"Error running scraper {scraper.__class__.__name__}: {e}")
+                logger.debug(traceback.format_exc())
 
     async def process_article(self, article_data, dry_run=False):
         url = article_data.get('url')
@@ -53,7 +56,7 @@ class IngestionService:
             return
 
         if dry_run:
-            print(f"[Dry Run] Would ingest: {url} - Title: {article_data.get('title')}")
+            logger.info(f"[Dry Run] Would ingest: {url} - Title: {article_data.get('title')}")
             return
 
         async with AsyncSessionLocal() as db:
@@ -61,31 +64,31 @@ class IngestionService:
                 # Check for duplicates
                 result = await db.execute(select(Article).where(Article.source_url == url))
                 existing = result.scalars().first()
-                
+
                 if existing:
-                    print(f"Skipping duplicate: {url}")
+                    logger.info(f"Skipping duplicate: {url}")
                     return
 
-                print(f"Ingesting: {url}")
-                
+                logger.info(f"Ingesting: {url}")
+
                 # Ollama Processing with Retry and Validation
                 ollama_result = None
                 for attempt in range(3):
-                    print(f"Ollama attempt {attempt + 1}/3 for {url}")
+                    logger.debug(f"Ollama attempt {attempt + 1}/3 for {url}")
                     raw_result = self._call_ollama(article_data.get('content', ''))
-                    
+
                     if raw_result:
                         is_valid, error_msg = validate_output(raw_result)
                         if is_valid:
                             ollama_result = raw_result
                             break
                         else:
-                            print(f"Validation failed for {url} (Attempt {attempt + 1}): {error_msg}")
+                            logger.warning(f"Validation failed for {url} (Attempt {attempt + 1}): {error_msg}")
                     else:
-                        print(f"Ollama returned None for {url} (Attempt {attempt + 1})")
-                
+                        logger.warning(f"Ollama returned None for {url} (Attempt {attempt + 1})")
+
                 if not ollama_result:
-                    print(f"Failed to get valid Ollama result for {url} after 3 attempts. Skipping.")
+                    logger.error(f"Failed to get valid Ollama result for {url} after 3 attempts. Skipping.")
                     return
 
                 # Parse published_at
@@ -97,7 +100,7 @@ class IngestionService:
                             published_at = published_at[:-1] + '+00:00'
                         published_at = datetime.fromisoformat(published_at)
                     except Exception as e:
-                        print(f"Error parsing date {published_at}: {e}")
+                        logger.warning(f"Error parsing date {published_at}: {e}")
                         published_at = None
 
                 # Create Article
@@ -108,43 +111,39 @@ class IngestionService:
                     publisher=article_data.get('source'),
                     published_at=published_at,
                     category_scores=self._extract_category_scores(ollama_result),
-                    metadata_=ollama_result 
+                    metadata_=ollama_result
                 )
 
-                print(
-                    "DEBUG category_scores type/value:",
-                    type(article.category_scores),
-                    article.category_scores,
-                )
-                
+                logger.debug(f"category_scores type/value: {type(article.category_scores)} {article.category_scores}")
+
                 db.add(article)
                 await db.commit()
-                print(f"Saved article: {article.title}")
-                
+                logger.info(f"Saved article: {article.title}")
+
             except Exception as e:
-                print(f"Error processing article {url}: {e}")
+                logger.error(f"Error processing article {url}: {e}")
                 await db.rollback()
 
     def _call_ollama(self, text):
         if not text:
             return None
-            
+
         try:
             # Truncate text if too long for context window (simple heuristic)
-            truncated_text = text[:4000] 
+            truncated_text = text[:4000]
             prompt = self.PROMPT_TEMPLATE.replace("{article_text}", truncated_text)
-            
+
             response = self.client.chat(
                 model=self.MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
                 stream=False
             )
-            
+
             raw_response = response.message.content
             return self._parse_ollama_json(raw_response)
-            
+
         except Exception as e:
-            print(f"Ollama error: {e}")
+            logger.error(f"Ollama error: {e}")
             return None
 
     def _parse_ollama_json(self, raw_response):
@@ -154,21 +153,21 @@ class IngestionService:
             end = cleaned.rfind('}')
             if start != -1 and end != -1:
                 cleaned = cleaned[start:end+1]
-            
+
             result = json.loads(cleaned)
-            
+
             # Normalize as per test script
             if "category" in result and isinstance(result["category"], dict):
                 for k, v in result["category"].items():
                     result[k] = v
                 del result["category"]
-                
+
             if "Named_Entities" in result:
                 result["Named Entities"] = result.pop("Named_Entities")
-                
+
             return result
         except Exception as e:
-            print(f"JSON parse error: {e}")
+            logger.error(f"JSON parse error: {e}")
             return None
 
     def _extract_category_scores(self, result):
@@ -189,5 +188,7 @@ class IngestionService:
         return scores
 
 if __name__ == "__main__":
+    # Basic logging setup for standalone execution
+    logging.basicConfig(level=logging.INFO)
     service = IngestionService()
     asyncio.run(service.run_daily_ingestion(dry_run=True))
