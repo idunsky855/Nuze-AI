@@ -28,7 +28,7 @@ class UserService:
 
     async def initialize_user_vector(self, user_id: str, onboarding_data):
         import numpy as np
-        
+
         # Constants from heuristic
         categories = [
             "Politics & Law", "Economy & Business", "Science & Technology",
@@ -38,7 +38,7 @@ class UserService:
         ]
         category_to_index = {cat: idx for idx, cat in enumerate(categories)}
         CATEGORY_DIM = len(categories)
-        TARGET_SUM = 5.0 # Based on utils.py in experiments (it said 5)
+        TARGET_SUM = 5.0 # Sum of all categories should be 5
 
         DEMOGRAPHIC_INFLUENCES = {
             'age': {
@@ -64,7 +64,7 @@ class UserService:
 
         def encode_demographics(age, gender, location):
             vec = np.zeros(CATEGORY_DIM)
-            
+
             # Age
             for (low, high), weights in DEMOGRAPHIC_INFLUENCES['age'].items():
                 if low <= age <= high:
@@ -72,26 +72,26 @@ class UserService:
                         if cat in category_to_index:
                             vec[category_to_index[cat]] += w
                     break
-            
+
             # Gender
             weights = DEMOGRAPHIC_INFLUENCES['gender'].get(gender.lower(), {})
             for cat, w in weights.items():
                 if cat in category_to_index:
                     vec[category_to_index[cat]] += w
-            
+
             # Location
             weights = DEMOGRAPHIC_INFLUENCES['location'].get(location.lower(), {})
             for cat, w in weights.items():
                 if cat in category_to_index:
                     vec[category_to_index[cat]] += w
-            
+
             return vec
 
         def rescale_and_normalize_vector(vector, target_sum=TARGET_SUM):
             min_val = np.min(vector)
             if min_val < 0:
                 vector += np.abs(min_val)
-            
+
             s = np.abs(vector).sum()
             if s > 0:
                 vector *= (target_sum / s)
@@ -100,18 +100,18 @@ class UserService:
         # Calculation Logic
         base = 0.5
         vec = np.ones(CATEGORY_DIM) * base
-        
+
         # Apply demographics
         vec += encode_demographics(onboarding_data.age, onboarding_data.gender, onboarding_data.location)
         vec = rescale_and_normalize_vector(vec)
-        
+
         # Apply preferences
         for pref in onboarding_data.preferences:
             if pref in category_to_index:
                 vec[category_to_index[pref]] += 0.25
-        
+
         vec = rescale_and_normalize_vector(vec)
-        
+
         # Update DB
         final_vector = vec.tolist()
         return await self.update_user_preferences(user_id, final_vector)

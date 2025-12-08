@@ -1,5 +1,0 @@
-# Run daily ingestion at 00:01 UTC (02:01 Local)
-01 00 * * * cd /app && /usr/bin/uv run scripts/daily_ingest.py >> /var/log/cron.log 2>&1
-# Run daily clustering at 02:00 UTC
-00 02 * * * cd /app && /usr/bin/uv run scripts/daily_cluster.py >> /var/log/cron.log 2>&1
-# Empty line is required

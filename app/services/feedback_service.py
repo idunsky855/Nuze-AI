@@ -3,7 +3,6 @@ from sqlalchemy.future import select
 from app.models.interaction import UserInteraction
 from app.models.article import Article
 from app.services.user_service import UserService
-from typing import List
 
 class FeedbackService:
     def __init__(self, db: AsyncSession):
@@ -18,11 +17,11 @@ class FeedbackService:
             is_liked=is_liked
         )
         self.db.add(interaction)
-        
+
         # 2. Update preferences if liked
         if is_liked:
             await self.update_preferences_from_article(user_id, article_id)
-        
+
         await self.db.commit()
         return interaction
 
@@ -30,23 +29,23 @@ class FeedbackService:
         # Get article vector
         result = await self.db.execute(select(Article).where(Article.id == article_id))
         article = result.scalar_one_or_none()
-        
+
         if not article or article.category_scores is None:
             return
-            
+
         article_vec = [float(x) for x in article.category_scores]
-        
+
         # Get user vector
         user_vec = await self.user_service.get_user_preferences(user_id)
-        
+
         if not user_vec:
             # Initialize with article vector
             new_vec = article_vec
         else:
-            # Simple update: move 10% towards article
+            # TODO:Simple update: move 10% towards article
             # new = old * 0.9 + article * 0.1
             new_vec = []
             for u, a in zip(user_vec, article_vec):
                 new_vec.append(u * 0.9 + a * 0.1)
-                
+
         await self.user_service.update_user_preferences(user_id, new_vec)
