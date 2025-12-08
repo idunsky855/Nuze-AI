@@ -9,7 +9,7 @@ services:
       - /app/.venv # Prevent host .venv from overwriting container .venv
     environment:
       - DATABASE_URL=postgresql+asyncpg://news_user:12345678@db:5432/news_db
-      # Add other environment variables your app needs
+      - OLLAMA_HOST=http://ollama:11434
     depends_on:
       db:
         condition: service_healthy # Wait for the DB to be ready

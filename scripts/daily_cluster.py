@@ -4,6 +4,7 @@ import os
 import json
 import math
 import ollama
+import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from sqlalchemy.future import select
@@ -20,6 +21,8 @@ from app.models.synthesized_article import SynthesizedArticle, SynthesizedSource
 class ClusterService:
     OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     MODEL_NAME = "news-combiner"
+
+    logger = logging.getLogger("daily_cluster")
 
     def __init__(self):
         self.client = ollama.Client(host=self.OLLAMA_HOST, timeout=600) # Longer timeout for generation
@@ -174,7 +177,7 @@ ARTICLE SET:
 Return ONLY the JSON object.
 """
 
-        print(f"Sending {len(articles)} articles to Ollama...")
+        self.logger.info(f"Sending {len(articles)} articles to Ollama...")
         try:
             response = self.client.chat(
                 model=self.MODEL_NAME,
@@ -188,10 +191,10 @@ Return ONLY the JSON object.
             if result:
                 await self.save_synthesized_article(db, result, articles, prompt)
             else:
-                print("Failed to parse Ollama response.")
+                self.logger.error("Failed to parse Ollama response.")
 
         except Exception as e:
-            print(f"Error calling Ollama: {e}")
+            self.logger.error(f"Error calling Ollama: {e}")
 
     def _parse_ollama_json(self, raw_response):
         try:
@@ -202,7 +205,7 @@ Return ONLY the JSON object.
                 cleaned = cleaned[start:end+1]
             return json.loads(cleaned)
         except Exception as e:
-            print(f"JSON parse error: {e}")
+            self.logger.error(f"JSON parse error: {e}")
             return None
 
     async def save_synthesized_article(self, db, result, source_articles, prompt):
@@ -211,7 +214,7 @@ Return ONLY the JSON object.
             analysis = result.get("analysis")
 
             if not generated_article or not analysis:
-                print("Missing generated_article or analysis in result.")
+                self.logger.error("Missing generated_article or analysis in result.")
                 return
 
             # Create SynthesizedArticle
@@ -233,12 +236,17 @@ Return ONLY the JSON object.
                 db.add(source)
 
             await db.commit()
-            print(f"Saved synthesized article {synth.id}")
+            self.logger.info(f"Saved synthesized article {synth.id}")
 
         except Exception as e:
-            print(f"Error saving synthesized article: {e}")
+            self.logger.error(f"Error saving synthesized article: {e}")
             await db.rollback()
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
     service = ClusterService()
     asyncio.run(service.run_daily_clustering())

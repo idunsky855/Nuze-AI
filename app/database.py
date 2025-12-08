@@ -16,7 +16,7 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 @event.listens_for(engine.sync_engine, "connect")
 def connect(dbapi_connection, connection_record):
     print("DEBUG: Registering pgvector on connection", file=sys.stderr)
-    dbapi_connection.run_async(register_vector)
+    # dbapi_connection.run_async(register_vector)
     sys.stderr.flush()
 
 AsyncSessionLocal = sessionmaker(

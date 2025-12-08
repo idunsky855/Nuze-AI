@@ -8,7 +8,10 @@ from app.routers import auth, users, ingestion, feed, summary, feedback
 # Import models to ensure they are registered with Base
 from app.models import user, article, summary as summary_model, interaction, synthesized_article
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
+)
 logger = logging.getLogger("nuze-backend")
 
 app = FastAPI(
@@ -41,7 +44,7 @@ async def startup_event():
     # Create tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Start Scheduler
     import asyncio
     from app.services.scheduler import start_scheduler

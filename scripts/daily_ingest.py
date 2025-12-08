@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import os
+import logging
 
 import argparse
 
@@ -14,7 +15,15 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Run scrapers but skip Ollama and DB insertion")
     args = parser.parse_args()
 
-    print(f"Starting Daily Ingest Script (Dry Run: {args.dry_run})")
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+    logger = logging.getLogger("daily_ingest")
+
+    logger.info(f"Starting Daily Ingest Script (Dry Run: {args.dry_run})")
     service = IngestionService()
     asyncio.run(service.run_daily_ingestion(dry_run=args.dry_run))
-    print("Daily Ingest Script Finished")
+    logger.info("Daily Ingest Script Finished")
