@@ -29,9 +29,3 @@ async def ingest_single_article(
         return {"message": "Article already exists or failed to ingest"}
     return {"message": "Article ingested", "id": article.id}
 
-# Mock endpoint to trigger bulk ingestion (e.g. from RSS)
-@router.post("/trigger-feed-fetch")
-async def trigger_feed_fetch(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
-    # In a real app, this would call a scraper service
-    # For now, we just return a message
-    return {"message": "Feed fetch triggered (mock)"}

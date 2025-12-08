@@ -8,7 +8,9 @@ from app.routers.users import get_current_user_id
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
-@router.get("/", response_model=List[Any]) # Use a proper schema for Article response
+from app.schemas.article import ArticleResponse
+
+@router.get("/", response_model=List[ArticleResponse]) # Use a proper schema for Article response
 async def get_feed(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
