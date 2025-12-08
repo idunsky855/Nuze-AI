@@ -28,16 +28,33 @@ class ClusterService:
         print("Starting daily clustering...")
         async with AsyncSessionLocal() as db:
             # 1. Fetch articles from the last 24 hours
-            cutoff = datetime.now() - timedelta(hours=24)
+            # 1. Fetch articles from the last 24 hours relative to the latest article
+            # First, get the latest article date
+            latest_article_result = await db.execute(
+                select(Article.published_at)
+                .where(Article.published_at.is_not(None))
+                .order_by(desc(Article.published_at))
+                .limit(1)
+            )
+            latest_date = latest_article_result.scalar_one_or_none()
+
+            if not latest_date:
+                print("No articles found in database. Exiting.")
+                return
+
+            cutoff = latest_date - timedelta(hours=24)
+            print(f"Latest article date: {latest_date}. Fetching articles since {cutoff}...")
+
             # Ensure we only fetch articles that have category scores
             result = await db.execute(
                 select(Article).where(
                     Article.published_at >= cutoff,
+                    Article.published_at <= latest_date,
                     Article.category_scores.is_not(None)
                 )
             )
             articles = result.scalars().all()
-            print(f"Fetched {len(articles)} articles from the last 24 hours.")
+            print(f"Fetched {len(articles)} articles from the 24h window ending at {latest_date}.")
 
             if not articles:
                 print("No articles found. Exiting.")
@@ -51,18 +68,18 @@ class ClusterService:
             # 3. Process each group
             for i, group_ids in enumerate(groups):
                 print(f"Processing cluster {i+1}/{len(groups)} with {len(group_ids)} articles.")
-                
+
                 # Fetch full article objects for the group and sort by published_at desc
                 # We already have them in 'articles' list, but let's filter and sort
                 group_articles = [a for a in articles if a.id in group_ids]
                 group_articles.sort(key=lambda x: x.published_at or datetime.min, reverse=True)
-                
-                # Take top 5 most current (though clustering logic already chunked them, 
+
+                # Take top 5 most current (though clustering logic already chunked them,
                 # user said "the articles running through the llm should be the most current ones in each cluster")
                 # If the cluster is larger than 5 (which shouldn't happen with the chunking logic unless we change it),
                 # we take top 5. The chunking logic in test/cluster.py forces chunks of size `num`, so this is redundant but safe.
                 target_articles = group_articles[:5]
-                
+
                 if not target_articles:
                     continue
 
@@ -90,22 +107,22 @@ class ClusterService:
                 vec = list(a.category_scores) if hasattr(a.category_scores, '__iter__') else a.category_scores
                 vectors.append(vec)
                 valid_articles.append(a)
-        
+
         if not vectors:
             return []
 
         ids = [a.id for a in valid_articles]
-        
+
         # how many clusters do we need?
         k = math.ceil(len(valid_articles) / num)
-        
+
         if k < 1:
             k = 1
 
         # If we have fewer samples than clusters, KMeans will fail.
         # But k = ceil(total/num) <= total, so k <= total.
         # Exception: if total < k (impossible by math) or if k=total (each point is a cluster)
-        
+
         if len(vectors) < k:
              # Should not happen given k calculation, but safety check
              k = len(vectors)
@@ -128,7 +145,7 @@ class ClusterService:
         # break each cluster into chunks of size `num`
         for label in sorted(clusters.keys()):
             group = clusters[label]
-            # Sort group by date desc before chunking? 
+            # Sort group by date desc before chunking?
             # The user said "articles running through the llm should be the most current ones in each cluster"
             # So let's sort the whole cluster by date first
             # We need to find the articles again to sort them
@@ -156,7 +173,7 @@ ARTICLE SET:
 
 Return ONLY the JSON object.
 """
-        
+
         print(f"Sending {len(articles)} articles to Ollama...")
         try:
             response = self.client.chat(
@@ -164,10 +181,10 @@ Return ONLY the JSON object.
                 messages=[{"role": "user", "content": prompt}],
                 stream=False
             )
-            
+
             raw_response = response.message.content
             result = self._parse_ollama_json(raw_response)
-            
+
             if result:
                 await self.save_synthesized_article(db, result, articles, prompt)
             else:
@@ -192,17 +209,14 @@ Return ONLY the JSON object.
         try:
             generated_article = result.get("generated_article")
             analysis = result.get("analysis")
-            
+
             if not generated_article or not analysis:
                 print("Missing generated_article or analysis in result.")
                 return
 
             # Create SynthesizedArticle
             synth = SynthesizedArticle(
-                title="Combined News", # The JSON doesn't strictly have a title field in the prompt description, maybe extract from text or use generic?
-                # Actually the prompt says "generated_article" is a string. It doesn't ask for a title.
-                # We can generate a title or just use a placeholder.
-                # Let's use the first few words or "Combined News"
+                title=result.get("title", "Combined News"),
                 content=generated_article,
                 generation_prompt=prompt,
                 analysis=analysis
@@ -217,7 +231,7 @@ Return ONLY the JSON object.
                     article_id=article.id
                 )
                 db.add(source)
-            
+
             await db.commit()
             print(f"Saved synthesized article {synth.id}")
 

@@ -33,7 +33,7 @@ services:
         condition: service_started
     networks:
       - app_network
-    command: sh -c "printenv > /etc/environment && cp /app/crontab /tmp/crontab && sed -i 's/\r$//' /tmp/crontab && crontab /tmp/crontab && touch /var/log/cron.log && cron -f"
+    command: sh -c "printenv > /etc/environment && cp /app/crontab /tmp/crontab && sed -i 's/\r$$//' /tmp/crontab && crontab /tmp/crontab && touch /var/log/cron.log && cron -f"
 
   frontend:
     build: ./frontend
@@ -91,8 +91,8 @@ services:
       - app_network
 
 volumes:
-  postgres_data:  # Define a named volume for data persistence
-  ollama_data: 
+  postgres_data: # Define a named volume for data persistence
+  ollama_data:
 
 
 networks:

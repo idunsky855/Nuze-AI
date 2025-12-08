@@ -20,6 +20,7 @@ Your job:
 
 Your output MUST ALWAYS be a single JSON object with EXACTLY TWO top-level keys:
 
+* "title"              → string, a concise, engaging, and neutral title for the article.
 * "generated_article"  → string, the full combined article text.
 * "analysis"           → JSON object with EXACTLY 15 keys as described below.
 
@@ -33,6 +34,11 @@ No prose, no markdown, no code fences. Only a single JSON object.
 1. GENERATED ARTICLE REQUIREMENTS
 
 ---
+
+The "title" value must:
+* Be a single string.
+* Be concise (under 15 words) and descriptive.
+* Be neutral and journalistic.
 
 The "generated_article" value must:
 
@@ -125,6 +131,7 @@ If this cannot be satisfied, output ONLY:
 Your final output MUST be a single JSON object with this exact structure:
 
 {
+"title": "<string>",
 "generated_article": "<string>",
 "analysis": {
 "Politics & Law": <float>,
