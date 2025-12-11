@@ -217,12 +217,25 @@ Return ONLY the JSON object.
                 self.logger.error("Missing generated_article or analysis in result.")
                 return
 
+            # Extract category scores in a strict order
+            category_keys = [
+                "Politics & Law", "Economy & Business", "Science & Technology",
+                "Health & Wellness", "Education & Society", "Culture & Entertainment",
+                "Religion & Belief", "Sports", "World & International Affairs",
+                "Opinion & General News"
+            ]
+
+            category_scores = []
+            for key in category_keys:
+                category_scores.append(float(analysis.get(key, 0.0)))
+
             # Create SynthesizedArticle
             synth = SynthesizedArticle(
                 title=result.get("title", "Combined News"),
                 content=generated_article,
                 generation_prompt=prompt,
-                analysis=analysis
+                analysis=analysis,
+                category_scores=category_scores
             )
             db.add(synth)
             await db.flush() # Get ID

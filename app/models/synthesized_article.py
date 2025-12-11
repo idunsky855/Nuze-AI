@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, DateTime, func, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
 from app.database import Base
 import uuid
@@ -14,6 +15,15 @@ class SynthesizedArticle(Base):
     generation_prompt = Column(Text)
     notes = Column(Text)
     analysis = Column(JSONB) # Storing the full analysis JSON here
+    category_scores = Column(Vector(10))
+
+    @property
+    def published_at(self):
+        return self.generated_at
+
+    @property
+    def publisher(self):
+        return "Nuze AI"
 
     # Relationship to sources
     sources = relationship("SynthesizedSource", back_populates="synthesized_article")

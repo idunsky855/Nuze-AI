@@ -15,8 +15,19 @@ class ArticleResponse(BaseModel):
     # Frontend expects 'author', we map publisher to it for now
     @property
     def author(self) -> Optional[str]:
+        # Handle SynthesizedArticle case
+        if self.publisher is None:
+             return "Nuze AI"
         return self.publisher
-    # Map 'metadata_' attribute from SQLAlchemy model to 'metadata' in JSON
-    metadata_: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="metadata")
+
+    # validator for backward compatibility if passing dictionary
+    @property
+    def published_at_field(self) -> Optional[datetime]:
+         if self.published_at:
+              return self.published_at
+         # Fallback for SynthesizedArticle which has generated_at
+         if hasattr(self, 'generated_at'):
+              return self.generated_at
+         return None
 
     model_config = ConfigDict(from_attributes=True)

@@ -14,7 +14,7 @@ class InteractionRequest(BaseModel):
     articleId: UUID
     type: Literal['like', 'dislike']
 
-@router.post("/")
+@router.post("")
 async def record_interaction(
     interaction: InteractionRequest,
     user_id: str = Depends(get_current_user_id),
