@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from app.database import engine, Base
-from app.routers import auth, users, ingestion, feed, summary, feedback
+from app.routers import auth, users, ingestion, feed, summary, feedback, interactions
 
 # Import models to ensure they are registered with Base
 from app.models import user, article, summary as summary_model, interaction, synthesized_article
@@ -36,6 +36,7 @@ app.include_router(ingestion.router)
 app.include_router(feed.router)
 app.include_router(summary.router)
 app.include_router(feedback.router)
+app.include_router(interactions.router)
 
 # Startup event
 @app.on_event("startup")

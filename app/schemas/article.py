@@ -11,6 +11,11 @@ class ArticleResponse(BaseModel):
     published_at: Optional[datetime] = None
     language: Optional[str] = None
     category_scores: Optional[List[float]] = None
+
+    # Frontend expects 'author', we map publisher to it for now
+    @property
+    def author(self) -> Optional[str]:
+        return self.publisher
     # Map 'metadata_' attribute from SQLAlchemy model to 'metadata' in JSON
     metadata_: Optional[Dict[str, Any]] = Field(default=None, serialization_alias="metadata")
 
