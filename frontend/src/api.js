@@ -1,5 +1,4 @@
 import axios from 'axios';
-import mockArticles from '../test/mock_articles.json';
 
 const API_URL = 'http://localhost:8000'; // Adjust based on backend URL
 
@@ -26,12 +25,8 @@ export const signup = async (userData) => {
 export const fetchArticles = async () => {
     try {
         // Try to hit the real endpoint first
-        // const response = await axios.get(`${API_URL}/feed`, { headers: getAuthHeader() });
-        // return response.data;
-        
-        // Fallback to mock for now if feed endpoint isn't ready or for testing
-        console.log("Fetching mock articles for test...");
-        return Promise.resolve(mockArticles);
+        const response = await axios.get(`${API_URL}/feed`, { headers: getAuthHeader() });
+        return response.data;
     } catch (error) {
         console.error("Error fetching articles:", error);
         throw error;
@@ -39,8 +34,7 @@ export const fetchArticles = async () => {
 };
 
 export const recordInteraction = async (articleId, type) => {
-    // Placeholder for API call
-    // await axios.post(`${API_URL}/interactions`, { articleId, type }, { headers: getAuthHeader() });
+    await axios.post(`${API_URL}/interactions`, { articleId, type }, { headers: getAuthHeader() });
     console.log(`Interaction recorded: ${type} on article ${articleId}`);
     return Promise.resolve();
 };

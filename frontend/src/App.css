@@ -41,7 +41,21 @@
   background-color: #121212;
   /* Dark card background */
   color: white;
-  transition: background 0.5s ease;
+  transition: all 0.5s ease;
+  overflow: hidden;
+  /* Hide overflow in collapsed state */
+  cursor: pointer;
+  /* Indicate clickable */
+}
+
+.article-card.expanded {
+  overflow-y: auto;
+  /* Enable scroll in expanded state */
+  justify-content: flex-start;
+  /* Align content to top */
+  padding-top: 60px;
+  /* Add some top padding */
+  cursor: default;
 }
 
 .article-card.like {
@@ -55,6 +69,14 @@
 .article-content {
   max-width: 600px;
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.article-card.expanded .article-content {
+  max-width: 800px;
+  /* Wider reading width */
+  text-align: left;
+  /* Left align for reading */
 }
 
 .article-title {
@@ -63,11 +85,38 @@
   font-weight: bold;
 }
 
+.article-body-container {
+  transition: all 0.3s ease;
+}
+
 .article-body {
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
   opacity: 0.9;
+}
+
+.read-more-hint {
+  font-size: 0.8rem;
+  color: #646cff;
+  /* Use brand color */
+  margin-top: 10px;
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }
 
 .article-meta {
