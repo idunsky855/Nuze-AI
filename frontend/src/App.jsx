@@ -169,9 +169,7 @@ function App() {
     setCurrentUser(updatedUser)
   }
 
-  const handleChangePassword = (currentPassword, newPassword) => {
-    return true
-  }
+
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -261,7 +259,6 @@ function App() {
             <Profile
               user={currentUser}
               onUpdateProfile={handleUpdateProfile}
-              onChangePassword={handleChangePassword}
               onCancel={() => navigate('/')}
             />
           </ProtectedRoute>

@@ -60,3 +60,11 @@ export const savePreferences = async (preferences) => {
     const response = await axios.post(`${API_URL}/me/preferences`, preferences, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const updatePassword = async (currentPassword, newPassword) => {
+    const response = await axios.post(`${API_URL}/me/password`, {
+        current_password: currentPassword,
+        new_password: newPassword
+    }, { headers: getAuthHeader() });
+    return response.data;
+};

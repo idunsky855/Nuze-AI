@@ -110,3 +110,27 @@ async def get_current_user_profile(
         "name": user.name,
         "is_onboarded": is_onboarded
     }
+
+from app.schemas.user import UserPasswordUpdate
+from app.utils.security import verify_password, get_password_hash
+
+@router.post("/password")
+async def update_password(
+    data: UserPasswordUpdate,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(data.current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+
+    user.hashed_password = get_password_hash(data.new_password)
+    # No need to add to session if fetched from it, just commit
+    await db.commit()
+
+    return {"message": "Password updated successfully"}

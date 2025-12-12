@@ -30,3 +30,7 @@ class UserOnboarding(BaseModel):
     gender: str
     location: str
     preferences: list[str]
+
+class UserPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
