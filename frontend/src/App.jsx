@@ -23,11 +23,11 @@ function App() {
     // Check for existing token
     const token = localStorage.getItem('token');
     if (token) {
-        setIsLoggedIn(true);
-        // Ideally we would fetch user profile here to get name/preferences status
-        // For now, we'll assume if they have a token they are logged in.
-        // We might need to handle expired tokens.
-        setCurrentUser({ email: 'User' }); // Placeholder
+      setIsLoggedIn(true);
+      // Ideally we would fetch user profile here to get name/preferences status
+      // For now, we'll assume if they have a token they are logged in.
+      // We might need to handle expired tokens.
+      setCurrentUser({ email: 'User' }); // Placeholder
     }
   }, []);
 
@@ -35,17 +35,21 @@ function App() {
     if (isLoggedIn) {
       const loadArticles = async () => {
         try {
+          setError(null); // Clear any previous errors
+          setLoading(true);
           const data = await fetchArticles()
           setArticles(data)
         } catch (err) {
-          setError('Failed to load articles')
+          // If 401, handleLogout might be better, but for now just error
+          console.error(err);
+          setError('Failed to load articles. Please try logging in again.')
         } finally {
           setLoading(false)
         }
       }
       loadArticles()
     } else {
-        setLoading(false);
+      setLoading(false);
     }
   }, [isLoggedIn])
 
@@ -53,21 +57,23 @@ function App() {
 
   const handleLogin = async (email, password) => {
     try {
-        const data = await login(email, password);
-        localStorage.setItem('token', data.access_token);
-        setIsLoggedIn(true);
-        setCurrentUser({ email: email }); // We could decode token or fetch profile
-        
-        // We don't know if they have preferences yet without fetching profile.
-        // For now, let's assume they might need to go to onboarding if it's a new signup flow,
-        // but typically login goes to home. 
-        // If we want to force onboarding, we need a way to check.
-        // Let's just go to home for now.
-        navigate('/');
-        return true;
+      setError(null);
+      setLoading(true); // Ensure loading state while prepping
+      const data = await login(email, password);
+      localStorage.setItem('token', data.access_token);
+      setIsLoggedIn(true);
+      setCurrentUser({ email: email }); // We could decode token or fetch profile
+
+      // We don't know if they have preferences yet without fetching profile.
+      // For now, let's just go to home.
+      navigate('/');
+      return true;
     } catch (err) {
-        console.error("Login failed", err);
-        throw err;
+      console.error("Login failed", err);
+      setError("Login failed. Please check your credentials.");
+      throw err;
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -96,7 +102,8 @@ function App() {
     setIsLoggedIn(false)
     setCurrentUser(null)
     setArticles([])
-    setLoading(true)
+    setError(null) // Clear error state on logout
+    setLoading(false) // No need to load anything
     setShowMenu(false)
     navigate('/login')
   }
@@ -149,15 +156,15 @@ function App() {
 
       <Routes>
         <Route path="/login" element={
-          !isLoggedIn ? 
-          <Login onLogin={handleLogin} onSwitchToSignup={() => navigate('/signup')} /> : 
-          <Navigate to="/" />
+          !isLoggedIn ?
+            <Login onLogin={handleLogin} onSwitchToSignup={() => navigate('/signup')} /> :
+            <Navigate to="/" />
         } />
-        
+
         <Route path="/signup" element={
-          !isLoggedIn ? 
-          <Signup onSwitchToLogin={() => navigate('/login')} /> : 
-          <Navigate to="/" />
+          !isLoggedIn ?
+            <Signup onSwitchToLogin={() => navigate('/login')} /> :
+            <Navigate to="/" />
         } />
 
         <Route path="/onboarding" element={
