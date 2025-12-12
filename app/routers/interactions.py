@@ -12,7 +12,7 @@ router = APIRouter(prefix="/interactions", tags=["interactions"])
 
 class InteractionRequest(BaseModel):
     articleId: UUID
-    type: Literal['like', 'dislike']
+    type: Literal['like', 'dislike', 'click']
 
 @router.post("")
 async def record_interaction(
@@ -22,7 +22,11 @@ async def record_interaction(
 ):
     service = FeedbackService(db)
 
-    is_liked = interaction.type == 'like'
+    is_liked = None
+    if interaction.type == 'like':
+        is_liked = True
+    elif interaction.type == 'dislike':
+        is_liked = False
 
     # We call record_feedback from the existing service which handles logic and vector updates
     await service.record_feedback(user_id, interaction.articleId, is_liked)

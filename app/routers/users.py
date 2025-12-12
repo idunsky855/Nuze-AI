@@ -45,7 +45,7 @@ async def update_preferences(
 ):
     if not prefs_in.interests_vector:
         raise HTTPException(status_code=400, detail="No preferences provided")
-        
+
     user_service = UserService(db)
     updated_prefs = await user_service.update_user_preferences(user_id, prefs_in.interests_vector)
     return {"interests_vector": updated_prefs}
@@ -61,3 +61,29 @@ async def onboarding(
     user_service = UserService(db)
     updated_prefs = await user_service.initialize_user_vector(user_id, data)
     return {"interests_vector": updated_prefs}
+
+from app.schemas.user import UserResponse
+from app.models.user import User
+from sqlalchemy.future import select
+
+@router.get("", response_model=UserResponse)
+async def get_current_user_profile(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if onboarded (heuristic: preferences vector exists)
+    is_onboarded = user.preferences is not None
+
+    # We can create a response object or just return a dict that matches schema
+    return {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "is_onboarded": is_onboarded
+    }

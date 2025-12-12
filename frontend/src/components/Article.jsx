@@ -12,6 +12,9 @@ const Article = ({ article }) => {
     };
 
     const toggleExpand = () => {
+        if (!isExpanded) {
+            recordInteraction(article.id, 'click');
+        }
         setIsExpanded(!isExpanded);
     };
 

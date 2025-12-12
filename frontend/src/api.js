@@ -22,10 +22,10 @@ export const signup = async (userData) => {
     return response.data;
 };
 
-export const fetchArticles = async () => {
+export const fetchArticles = async (skip = 0, limit = 20) => {
     try {
         // Try to hit the real endpoint first
-        const response = await axios.get(`${API_URL}/feed`, { headers: getAuthHeader() });
+        const response = await axios.get(`${API_URL}/feed?skip=${skip}&limit=${limit}`, { headers: getAuthHeader() });
         return response.data;
     } catch (error) {
         console.error("Error fetching articles:", error);
@@ -43,5 +43,10 @@ export const initiateUser = async (data) => {
     const response = await axios.post(`${API_URL}/me/onboarding`, data, {
         headers: getAuthHeader()
     });
+    return response.data;
+};
+
+export const fetchCurrentUser = async () => {
+    const response = await axios.get(`${API_URL}/me`, { headers: getAuthHeader() });
     return response.data;
 };

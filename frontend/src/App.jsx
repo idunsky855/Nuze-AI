@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import './App.css'
 import Article from './components/Article'
 import Login from './components/Login'
@@ -7,7 +7,7 @@ import Signup from './components/Signup'
 import Onboarding from './components/Onboarding'
 import Preferences from './components/Preferences'
 import Profile from './components/Profile'
-import { fetchArticles, login } from './api'
+import { fetchArticles, login, fetchCurrentUser } from './api'
 
 function App() {
   console.log('App rendering');
@@ -16,57 +16,127 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentUser, setCurrentUser] = useState(null)
+
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   useEffect(() => {
     // Check for existing token
     const token = localStorage.getItem('token');
     if (token) {
-      setIsLoggedIn(true);
-      // Ideally we would fetch user profile here to get name/preferences status
-      // For now, we'll assume if they have a token they are logged in.
-      // We might need to handle expired tokens.
-      setCurrentUser({ email: 'User' }); // Placeholder
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      const loadArticles = async () => {
-        try {
-          setError(null); // Clear any previous errors
-          setLoading(true);
-          const data = await fetchArticles()
-          setArticles(data)
-        } catch (err) {
-          // If 401, handleLogout might be better, but for now just error
-          console.error(err);
-          setError('Failed to load articles. Please try logging in again.')
-        } finally {
-          setLoading(false)
-        }
-      }
-      loadArticles()
+      // Fetch user profile to check onboarding status
+      fetchCurrentUser()
+        .then(user => {
+          setIsLoggedIn(true);
+          setCurrentUser(user);
+          if (!user.is_onboarded) {
+            navigate('/onboarding');
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch user", err);
+          // If token invalid, logout
+          handleLogout();
+        });
     } else {
       setLoading(false);
     }
-  }, [isLoggedIn])
+  }, []); // Run once on mount
+
+  const loadArticles = async (currentPage = 0, isRefresh = false) => {
+    if (!hasMore && !isRefresh) return;
+
+    try {
+      if (currentPage === 0) {
+        setLoading(true);
+        setError(null);
+      } else {
+        setIsFetchingMore(true);
+      }
+
+      const limit = 20;
+      const skip = currentPage * limit;
+      const newArticles = await fetchArticles(skip, limit);
+
+      if (newArticles.length < limit) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+
+      if (currentPage === 0) {
+        setArticles(newArticles);
+      } else {
+        setArticles(prev => [...prev, ...newArticles]);
+      }
+    } catch (err) {
+      console.error(err);
+      if (currentPage === 0) {
+        setError('Failed to load articles. Please try logging in again.');
+      }
+    } finally {
+      setLoading(false);
+      setIsFetchingMore(false);
+    }
+  };
+
+  // Initial Fetch on Login
+  useEffect(() => {
+    if (isLoggedIn) {
+      if (currentUser && !currentUser.is_onboarded && location.pathname !== '/onboarding') {
+        navigate('/onboarding');
+        setLoading(false);
+        return;
+      }
+      // Reset logic
+      setPage(0);
+      setHasMore(true);
+      loadArticles(0, true);
+    } else {
+      setLoading(false);
+    }
+  }, [isLoggedIn, currentUser, location.pathname]);
+
+  // Scroll Listener for Infinite Scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop + 1 >= document.documentElement.scrollHeight) {
+        if (hasMore && !isFetchingMore && !loading) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          loadArticles(nextPage);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, isFetchingMore, loading, page]);
 
   const [showMenu, setShowMenu] = useState(false)
 
   const handleLogin = async (email, password) => {
     try {
       setError(null);
-      setLoading(true); // Ensure loading state while prepping
+      setLoading(true);
       const data = await login(email, password);
       localStorage.setItem('token', data.access_token);
-      setIsLoggedIn(true);
-      setCurrentUser({ email: email }); // We could decode token or fetch profile
 
-      // We don't know if they have preferences yet without fetching profile.
-      // For now, let's just go to home.
-      navigate('/');
+      // Fetch user details to check onboarding
+      const user = await fetchCurrentUser();
+      setIsLoggedIn(true);
+      setCurrentUser(user);
+
+      if (!user.is_onboarded) {
+        navigate('/onboarding');
+      } else {
+        navigate('/');
+      }
       return true;
     } catch (err) {
       console.error("Login failed", err);
@@ -206,6 +276,8 @@ function App() {
                 {articles.map((article, index) => (
                   <Article key={article.id || index} article={article} />
                 ))}
+                {isFetchingMore && <p style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>Loading more articles...</p>}
+                {!hasMore && articles.length > 0 && <p style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>You've reached the end of the feed.</p>}
               </div>
             )}
           </ProtectedRoute>

@@ -20,7 +20,8 @@ class Token(BaseModel):
 class UserResponse(UserBase):
     id: UUID
     name: Optional[str] = None
-    
+    is_onboarded: bool = False
+
     class Config:
         from_attributes = True
 

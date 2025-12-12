@@ -12,9 +12,11 @@ from app.schemas.article import ArticleResponse
 
 @router.get("/", response_model=List[ArticleResponse]) # Use a proper schema for Article response
 async def get_feed(
+    skip: int = 0,
+    limit: int = 20,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     feed_service = FeedService(db)
-    articles = await feed_service.get_personalized_feed(user_id)
+    articles = await feed_service.get_personalized_feed(user_id, limit=limit, skip=skip)
     return articles
