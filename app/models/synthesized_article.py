@@ -16,6 +16,7 @@ class SynthesizedArticle(Base):
     notes = Column(Text)
     analysis = Column(JSONB) # Storing the full analysis JSON here
     category_scores = Column(Vector(10))
+    metadata_scores = Column(JSONB)
 
     @property
     def published_at(self):

@@ -50,3 +50,13 @@ export const fetchCurrentUser = async () => {
     const response = await axios.get(`${API_URL}/me`, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const fetchPreferences = async () => {
+    const response = await axios.get(`${API_URL}/me/preferences`, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const savePreferences = async (preferences) => {
+    const response = await axios.post(`${API_URL}/me/preferences`, preferences, { headers: getAuthHeader() });
+    return response.data;
+};

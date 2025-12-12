@@ -645,3 +645,125 @@
   cursor: pointer;
   margin-top: 20px;
 }
+
+/* =========================================
+   Preferences Redesign & Responsive Grid
+   ========================================= */
+
+.preferences-card {
+  max-width: 900px;
+  /* Wider for grid */
+  width: 95%;
+  padding: 40px;
+  max-height: 90vh;
+  overflow-y: auto;
+  align-self: center;
+  /* Center in container */
+}
+
+.preferences-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  text-align: left;
+}
+
+.preference-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  color: #fff;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.preference-group {
+  margin-bottom: 25px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 15px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+}
+
+.preference-group:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.label-row label {
+  font-weight: 600;
+  color: #ddd;
+  font-size: 0.95rem;
+}
+
+.value-badge {
+  background: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.slider-icon {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.preference-slider {
+  flex: 1;
+  height: 6px;
+  margin: 0;
+}
+
+.form-actions {
+  text-align: center;
+  margin-top: 30px;
+  grid-column: 1 / -1;
+  /* Span both columns */
+}
+
+.save-button {
+  width: auto;
+  padding: 12px 40px;
+  font-size: 1.1rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .preferences-grid {
+    grid-template-columns: 1fr;
+    /* Stack columns */
+    gap: 20px;
+  }
+
+  .preferences-card {
+    padding: 20px;
+    height: auto;
+    max-height: 95vh;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    margin-top: 10px;
+  }
+}

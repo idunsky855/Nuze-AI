@@ -229,13 +229,33 @@ Return ONLY the JSON object.
             for key in category_keys:
                 category_scores.append(float(analysis.get(key, 0.0)))
 
+            # Extract Metadata
+            # Helper to safely ge float
+            def get_score(key, default=0.5):
+                val = analysis.get(key)
+                if isinstance(val, (int, float)):
+                    return float(val)
+                # Handle nested tone if present
+                if key in ["Neutral", "Informative", "Emotional"] and "Tone" in analysis and isinstance(analysis["Tone"], dict):
+                    return float(analysis["Tone"].get(key, default))
+                return default
+
+            metadata_scores = {
+                "Length": get_score("Length"),
+                "Complexity": get_score("Complexity"),
+                "Neutral": get_score("Neutral"),
+                "Informative": get_score("Informative"),
+                "Emotional": get_score("Emotional")
+            }
+
             # Create SynthesizedArticle
             synth = SynthesizedArticle(
                 title=result.get("title", "Combined News"),
                 content=generated_article,
                 generation_prompt=prompt,
                 analysis=analysis,
-                category_scores=category_scores
+                category_scores=category_scores,
+                metadata_scores=metadata_scores
             )
             db.add(synth)
             await db.flush() # Get ID

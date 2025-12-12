@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from pgvector.sqlalchemy import Vector
 from app.database import Base
 import uuid
@@ -13,4 +13,5 @@ class User(Base):
     name = Column(String)
     # Preferences vector (dimension 10)
     preferences = Column(Vector(10))
+    preferences_metadata = Column(JSONB)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

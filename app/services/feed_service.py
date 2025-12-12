@@ -14,7 +14,7 @@ class FeedService:
         import random
 
         # Get user preferences
-        prefs = await self.user_service.get_user_preferences(user_id)
+        prefs, _ = await self.user_service.get_user_preferences(user_id)
 
         if not prefs:
             # Fallback to recent articles if no preferences

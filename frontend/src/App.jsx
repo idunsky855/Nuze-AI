@@ -25,28 +25,31 @@ function App() {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
+  // Initial Mount Effect - Check Token
   useEffect(() => {
-    // Check for existing token
+    console.log("App mounted. Checking token...");
     const token = localStorage.getItem('token');
     if (token) {
-      // Fetch user profile to check onboarding status
+      console.log("Token found. Fetching user...");
       fetchCurrentUser()
         .then(user => {
+          console.log("User fetched successfully", user.id);
           setIsLoggedIn(true);
           setCurrentUser(user);
           if (!user.is_onboarded) {
+            console.log("User not onboarded. Redirecting...");
             navigate('/onboarding');
           }
         })
         .catch(err => {
-          console.error("Failed to fetch user", err);
-          // If token invalid, logout
+          console.error("Failed to fetch user (401?)", err);
           handleLogout();
         });
     } else {
+      console.log("No token found.");
       setLoading(false);
     }
-  }, []); // Run once on mount
+  }, []);
 
   const loadArticles = async (currentPage = 0, isRefresh = false) => {
     if (!hasMore && !isRefresh) return;
@@ -85,7 +88,7 @@ function App() {
     }
   };
 
-  // Initial Fetch on Login
+  // Initial Fetch on Login / Tab Change
   useEffect(() => {
     if (isLoggedIn) {
       if (currentUser && !currentUser.is_onboarded && location.pathname !== '/onboarding') {
@@ -94,17 +97,25 @@ function App() {
         return;
       }
       // Reset logic
-      setPage(0);
-      setHasMore(true);
-      loadArticles(0, true);
+      // Only reload articles if we are on Feed (/)
+      if (location.pathname === '/') {
+        setPage(0);
+        setHasMore(true);
+        loadArticles(0, true);
+      } else {
+        setLoading(false);
+      }
     } else {
-      setLoading(false);
+      // If not logged in, loading handled by Mount Effect
     }
   }, [isLoggedIn, currentUser, location.pathname]);
 
   // Scroll Listener for Infinite Scroll
   useEffect(() => {
     const handleScroll = () => {
+      // Only scroll if on feed
+      if (location.pathname !== '/') return;
+
       if (window.innerHeight + document.documentElement.scrollTop + 1 >= document.documentElement.scrollHeight) {
         if (hasMore && !isFetchingMore && !loading) {
           const nextPage = page + 1;
@@ -116,19 +127,21 @@ function App() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, isFetchingMore, loading, page]);
+  }, [hasMore, isFetchingMore, loading, page, location.pathname]);
 
   const [showMenu, setShowMenu] = useState(false)
 
   const handleLogin = async (email, password) => {
     try {
+      console.log("Handling login...");
       setError(null);
       setLoading(true);
       const data = await login(email, password);
+      console.log("Login successful. Token:", data.access_token ? "Yes" : "No");
       localStorage.setItem('token', data.access_token);
 
-      // Fetch user details to check onboarding
       const user = await fetchCurrentUser();
+      console.log("User fetched:", user.id);
       setIsLoggedIn(true);
       setCurrentUser(user);
 
@@ -147,33 +160,27 @@ function App() {
     }
   }
 
-  // Signup is handled in Signup component directly calling api.signup
-
   const handleSavePreferences = (prefs) => {
-    // This is now handled by Onboarding component calling initiateUser
-    // But if we have a separate preferences page, it might use a different API.
-    // For now, let's just navigate.
     navigate('/')
   }
 
   const handleUpdateProfile = (updatedData) => {
-    // Placeholder
     const updatedUser = { ...currentUser, ...updatedData }
     setCurrentUser(updatedUser)
   }
 
   const handleChangePassword = (currentPassword, newPassword) => {
-    // Placeholder
     return true
   }
 
   const handleLogout = () => {
+    console.log("Logging out...");
     localStorage.removeItem('token');
     setIsLoggedIn(false)
     setCurrentUser(null)
     setArticles([])
-    setError(null) // Clear error state on logout
-    setLoading(false) // No need to load anything
+    setError(null)
+    setLoading(false)
     setShowMenu(false)
     navigate('/login')
   }

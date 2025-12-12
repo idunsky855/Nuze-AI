@@ -71,19 +71,65 @@ class FeedbackService:
         if not article_obj or article_obj.category_scores is None:
             return
 
-        article_vec = np.array([float(x) for x in article_obj.category_scores])
+        # 1. Construct Article Full Vector (15 dims)
+        article_cat_vec = np.array([float(x) for x in article_obj.category_scores])
 
-        # Get user vector
-        user_vec_list = await self.user_service.get_user_preferences(user_id)
+        # Metadata defaults if missing
+        default_meta = {"Length": 0.5, "Complexity": 0.5, "Neutral": 0.5, "Informative": 0.5, "Emotional": 0.5}
+        article_meta_dict = article_obj.metadata_scores if article_obj.metadata_scores else default_meta
+        article_meta_vec = self._get_metadata_vector(article_meta_dict)
 
-        if not user_vec_list:
-            # Initialize with article vector (rescaled)
-            new_vec = self._rescale_and_normalize_vector(article_vec)
+        article_full_vec = np.concatenate([article_cat_vec, article_meta_vec])
+
+        # 2. Get User Full Vector (15 dims)
+        user_cat_list, user_meta_dict = await self.user_service.get_user_preferences(user_id)
+
+        if not user_cat_list:
+            # Initialize with article vector (rescaled categories, raw metadata)
+            # Replicate initialization logic:
+            # Categories: Normalize to 5.0
+            new_cat_vec = self._rescale_and_normalize_vector(article_cat_vec)
+            # Metadata: Keep as is (Assuming article metadata is valid reference point)
+            new_meta_vec = article_meta_vec
+
+            new_full_vec = np.concatenate([new_cat_vec, new_meta_vec])
+             # Actually we only need to save, not run update math
         else:
-            user_vec = np.array(user_vec_list)
-            new_vec = self._calculate_update(user_vec, article_vec, is_liked)
+            user_cat_vec = np.array(user_cat_list)
+            # Use defaults if user has no metadata yet (e.g. legacy user)
+            user_meta_dict = user_meta_dict if user_meta_dict else default_meta
+            user_meta_vec = self._get_metadata_vector(user_meta_dict)
 
-        await self.user_service.update_user_preferences(user_id, new_vec.tolist())
+            user_full_vec = np.concatenate([user_cat_vec, user_meta_vec])
+
+            # 3. Calculate Update on Full Vector
+            # updated_vec is raw (not normalized)
+            updated_full_vec = self._calculate_update(user_full_vec, article_full_vec, is_liked)
+
+            # 4. Split and Normalize/Clip
+            # Split back to 10 and 5
+            new_cat_vec = updated_full_vec[:10]
+            new_meta_vec = updated_full_vec[10:]
+
+            # Normalize Categories
+            new_cat_vec = self._rescale_and_normalize_vector(new_cat_vec)
+
+        # Clip Metadata (0-1)
+        # Note: If we entered 'if not user_cat_list' branch, new_meta_vec is defined there too.
+        new_meta_vec = np.clip(new_meta_vec, 0.0, 1.0)
+
+        # Convert back to dict
+        new_meta_dict = self._get_metadata_dict(new_meta_vec)
+
+        await self.user_service.update_user_preferences(user_id, new_cat_vec.tolist(), new_meta_dict)
+
+    def _get_metadata_vector(self, meta_dict: dict) -> np.array:
+        order = ["Length", "Complexity", "Neutral", "Informative", "Emotional"]
+        return np.array([float(meta_dict.get(k, 0.5)) for k in order])
+
+    def _get_metadata_dict(self, meta_vec: np.array) -> dict:
+        order = ["Length", "Complexity", "Neutral", "Informative", "Emotional"]
+        return {k: float(v) for k, v in zip(order, meta_vec)}
 
     def _rescale_and_normalize_vector(self, vector: np.array, target_sum=5.0) -> np.array:
         min_val = np.min(vector)
@@ -136,4 +182,4 @@ class FeedbackService:
                 else:
                     updated_vec[i] = val - effective_lr * update_ratio[i]
 
-        return self._rescale_and_normalize_vector(updated_vec)
+        return updated_vec

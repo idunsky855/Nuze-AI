@@ -10,24 +10,26 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user_preferences(self, user_id) -> List[float]:
+    async def get_user_preferences(self, user_id) -> tuple[List[float], dict]:
         result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
-        if user and user.preferences is not None:
-            # pgvector returns a list or numpy array, let's ensure list
-            return list(user.preferences)
-        return []
+        if user:
+            prefs = list(user.preferences) if user.preferences is not None else []
+            meta = user.preferences_metadata if user.preferences_metadata else {}
+            return prefs, meta
+        return [], {}
 
-    async def update_user_preferences(self, user_id, preferences: List[float]):
+    async def update_user_preferences(self, user_id, preferences: List[float], metadata: dict = None):
         result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         if user:
             user.preferences = preferences
+            if metadata is not None:
+                user.preferences_metadata = metadata
             await self.db.commit()
             await self.db.refresh(user)
             logger.info(f"Updated preferences for user {user_id}")
             return list(user.preferences)
-        return None
         return None
 
     async def initialize_user_vector(self, user_id: str, onboarding_data):
@@ -116,6 +118,15 @@ class UserService:
 
         vec = rescale_and_normalize_vector(vec)
 
+        # Initialize Metadata (Default 0.5)
+        metadata_init = {
+            "Length": 0.5,
+            "Complexity": 0.5,
+            "Neutral": 0.5,
+            "Informative": 0.5,
+            "Emotional": 0.5
+        }
+
         # Update DB
         final_vector = vec.tolist()
-        return await self.update_user_preferences(user_id, final_vector)
+        return await self.update_user_preferences(user_id, final_vector, metadata_init)
