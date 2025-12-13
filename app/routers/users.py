@@ -134,3 +134,17 @@ async def update_password(
     await db.commit()
 
     return {"message": "Password updated successfully"}
+
+from typing import List
+from app.schemas.article import ArticleResponse
+
+@router.get("/read", response_model=List[ArticleResponse])
+async def get_read_history(
+    skip: int = 0,
+    limit: int = 20,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    user_service = UserService(db)
+    articles = await user_service.get_read_articles(user_id, limit, skip)
+    return articles

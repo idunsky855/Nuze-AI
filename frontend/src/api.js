@@ -33,6 +33,16 @@ export const fetchArticles = async (skip = 0, limit = 20) => {
     }
 };
 
+export const fetchReadHistory = async (skip = 0, limit = 20) => {
+    try {
+        const response = await axios.get(`${API_URL}/me/read?skip=${skip}&limit=${limit}`, { headers: getAuthHeader() });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching read history:", error);
+        throw error;
+    }
+};
+
 export const recordInteraction = async (articleId, type) => {
     await axios.post(`${API_URL}/interactions`, { articleId, type }, { headers: getAuthHeader() });
     console.log(`Interaction recorded: ${type} on article ${articleId}`);

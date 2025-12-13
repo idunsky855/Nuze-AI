@@ -8,7 +8,7 @@ import Signup from './components/Signup'
 import Onboarding from './components/Onboarding'
 import Preferences from './components/Preferences'
 import Profile from './components/Profile'
-import { fetchArticles, login, fetchCurrentUser } from './api'
+import { fetchArticles, login, fetchCurrentUser, fetchReadHistory } from './api'
 
 function App() {
   console.log('App rendering');
@@ -25,6 +25,7 @@ function App() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed' or 'read'
 
   // Initial Mount Effect - Check Token
   useEffect(() => {
@@ -65,7 +66,13 @@ function App() {
 
       const limit = 20;
       const skip = currentPage * limit;
-      const newArticles = await fetchArticles(skip, limit);
+      let newArticles = [];
+
+      if (activeTab === 'read') {
+        newArticles = await fetchReadHistory(skip, limit);
+      } else {
+        newArticles = await fetchArticles(skip, limit);
+      }
 
       if (newArticles.length < limit) {
         setHasMore(false);
@@ -109,7 +116,7 @@ function App() {
     } else {
       // If not logged in, loading handled by Mount Effect
     }
-  }, [isLoggedIn, currentUser, location.pathname]);
+  }, [isLoggedIn, currentUser, location.pathname, activeTab]);
 
   const containerRef = useRef(null);
 
@@ -302,6 +309,39 @@ function App() {
               </div>
             ) : (
               <div>
+                <div className="feed-tabs">
+                  <button
+                    className={`tab-button ${activeTab === 'feed' ? 'active' : ''}`}
+                    onClick={() => {
+                      if (activeTab !== 'feed') {
+                        setActiveTab('feed');
+                        setArticles([]);
+                        setLoading(true);
+                      }
+                    }}
+                  >
+                    For You
+                  </button>
+                  <button
+                    className={`tab-button ${activeTab === 'read' ? 'active' : ''}`}
+                    onClick={() => {
+                      if (activeTab !== 'read') {
+                        setActiveTab('read');
+                        setArticles([]);
+                        setLoading(true);
+                      }
+                    }}
+                  >
+                    Read History
+                  </button>
+                </div>
+
+                {articles.length === 0 && !loading && !error && (
+                  <div className="empty-state">
+                    {activeTab === 'read' ? "You haven't read any articles yet." : "No articles found."}
+                  </div>
+                )}
+
                 {articles.map((article, index) => (
                   <Article key={article.id || index} article={article} />
                 ))}

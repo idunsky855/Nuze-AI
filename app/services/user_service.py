@@ -130,3 +130,19 @@ class UserService:
         # Update DB
         final_vector = vec.tolist()
         return await self.update_user_preferences(user_id, final_vector, metadata_init)
+
+    async def get_read_articles(self, user_id, limit=20, skip=0):
+        from app.models.interaction import UserInteraction
+        from app.models.synthesized_article import SynthesizedArticle
+        from sqlalchemy import desc
+
+        stmt = (
+            select(SynthesizedArticle)
+            .join(UserInteraction, UserInteraction.synthesized_article_id == SynthesizedArticle.id)
+            .where(UserInteraction.user_id == user_id)
+            .order_by(desc(UserInteraction.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()

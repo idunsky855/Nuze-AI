@@ -16,17 +16,29 @@ class FeedService:
         # Get user preferences
         prefs, _ = await self.user_service.get_user_preferences(user_id)
 
+        from app.models.interaction import UserInteraction
+
+        # Subquery for articles the user has interacted with
+        interacted_subquery = select(UserInteraction.synthesized_article_id).where(
+            UserInteraction.user_id == user_id
+        )
+
         if not prefs:
-            # Fallback to recent articles if no preferences
             result = await self.db.execute(
-                select(SynthesizedArticle).order_by(SynthesizedArticle.generated_at.desc()).offset(skip).limit(limit)
+                select(SynthesizedArticle)
+                .where(SynthesizedArticle.id.not_in(interacted_subquery))
+                .order_by(SynthesizedArticle.generated_at.desc())
+                .offset(skip)
+                .limit(limit)
             )
             return result.scalars().all()
 
         # Fetch a larger pool for randomness (buckets are 10, 10, and rest)
         # We need enough items to satisfy the request even if we hit the 'rest' bucket often or run out of 'best'
         pool_limit = 50
-        stmt = select(SynthesizedArticle).order_by(
+        stmt = select(SynthesizedArticle).where(
+            SynthesizedArticle.id.not_in(interacted_subquery)
+        ).order_by(
             SynthesizedArticle.category_scores.cosine_distance(prefs)
         ).offset(skip).limit(pool_limit)
 
