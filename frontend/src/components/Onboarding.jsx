@@ -9,7 +9,7 @@ const categories = [
     "Opinion & General News"
 ];
 
-const Onboarding = () => {
+const Onboarding = ({ onOnboardingComplete }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         age: '',
@@ -45,7 +45,11 @@ const Onboarding = () => {
                 ...formData,
                 age: parseInt(formData.age)
             });
-            navigate('/'); // Redirect to home/feed
+            if (onOnboardingComplete) {
+                onOnboardingComplete();
+            } else {
+                navigate('/');
+            }
         } catch (err) {
             setError('Failed to submit onboarding data');
             console.error(err);

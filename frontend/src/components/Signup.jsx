@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from '../api';
 
-const Signup = ({ onSwitchToLogin }) => {
+const Signup = ({ onSwitchToLogin, onAutoLogin }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
@@ -28,10 +28,13 @@ const Signup = ({ onSwitchToLogin }) => {
         }
         try {
             await signup(formData);
-            // After successful signup, redirect to login so they can get a token
-            // Or we could auto-login, but let's keep it simple for now
-            alert('Signup successful! Please login.');
-            onSwitchToLogin();
+            // Auto-login after successful signup
+            if (onAutoLogin) {
+                await onAutoLogin(formData.email, formData.password);
+            } else {
+                alert('Signup successful! Please login.');
+                onSwitchToLogin();
+            }
         } catch (err) {
             console.error(err);
             if (err.response && err.response.data && err.response.data.detail) {

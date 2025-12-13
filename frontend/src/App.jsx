@@ -169,6 +169,17 @@ function App() {
     setCurrentUser(updatedUser)
   }
 
+  const handleOnboardingComplete = async () => {
+    // Refresh user to get updated is_onboarded status
+    try {
+      const user = await fetchCurrentUser();
+      setCurrentUser(user);
+      navigate('/');
+    } catch (err) {
+      console.error("Failed to refresh user after onboarding", err);
+    }
+  }
+
 
 
   const handleLogout = () => {
@@ -238,13 +249,13 @@ function App() {
 
         <Route path="/signup" element={
           !isLoggedIn ?
-            <Signup onSwitchToLogin={() => navigate('/login')} /> :
+            <Signup onSwitchToLogin={() => navigate('/login')} onAutoLogin={handleLogin} /> :
             <Navigate to="/" />
         } />
 
         <Route path="/onboarding" element={
           <ProtectedRoute>
-            <Onboarding />
+            <Onboarding onOnboardingComplete={handleOnboardingComplete} />
           </ProtectedRoute>
         } />
 
