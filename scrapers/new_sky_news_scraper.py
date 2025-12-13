@@ -33,7 +33,7 @@ class SkyNewsScraper(BaseScraper):
     async def scrape(self) -> List[Dict[str, Any]]:
         print("Starting Sky News scrape...")
         articles_data = []
-        
+
         # Step 1: Parse RSS feeds to get URLs
         all_entries = []
         for feed_url in self.RSS_URLS:
@@ -51,14 +51,14 @@ class SkyNewsScraper(BaseScraper):
         # Step 2: Fetch full text for each article
         async with aiohttp.ClientSession() as session:
             semaphore = asyncio.Semaphore(10)
-            
+
             async def fetch_entry(entry):
                 async with semaphore:
                     return await self._process_entry(session, entry)
 
             tasks = [fetch_entry(entry) for entry in unique_entries]
             results = await asyncio.gather(*tasks)
-            
+
             for res in results:
                 if res:
                     articles_data.append(res)
@@ -85,7 +85,7 @@ class SkyNewsScraper(BaseScraper):
                     timestamp = None
                     if 'published_parsed' in entry:
                         timestamp = time.strftime('%Y-%m-%dT%H:%M:%SZ', entry.published_parsed)
-                    
+
                     # Content Extraction
                     # Sky News usually puts text in <div class="sdc-article-body-wrapper"> or similar
                     # We'll look for standard paragraph containers
@@ -93,16 +93,22 @@ class SkyNewsScraper(BaseScraper):
                     if not article_body:
                         # Fallback for other layouts
                         article_body = soup.find('div', class_='sdc-article-body')
-                    
+
                     content = ""
                     if article_body:
                         paragraphs = article_body.find_all('p')
                         content = "\n\n".join([p.get_text(strip=True) for p in paragraphs])
-                    
+
                     if not content:
                         # Fallback: try to find all p tags in main content area if possible, or just skip
                         # For now, let's skip if we can't find the main body to avoid noise
                         return None
+
+                    # Image
+                    image_url = None
+                    og_image = soup.find('meta', property='og:image')
+                    if og_image:
+                        image_url = og_image.get('content')
 
                     return {
                         "url": url,
@@ -110,6 +116,7 @@ class SkyNewsScraper(BaseScraper):
                         "summary": summary,
                         "content": content,
                         "published_at": timestamp,
+                        "image_url": image_url,
                         "source": "Sky News",
                         "text_hash": self.compute_hash(content)
                     }

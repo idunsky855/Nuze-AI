@@ -29,33 +29,33 @@ class CNNScraper(BaseScraper):
     async def scrape(self) -> List[Dict[str, Any]]:
         print("Starting CNN scrape (aiohttp + BS4)...")
         articles_data = []
-        
+
         async with aiohttp.ClientSession(headers={'User-Agent': self.USER_AGENT}) as session:
             # Step 1: Get all article URLs from sections
             tasks = [self._get_article_urls(session, section_url) for section_url in self.SECTION_URLS]
             results = await asyncio.gather(*tasks)
-            
+
             all_urls = set()
             for urls in results:
                 all_urls.update(urls)
-            
+
             print(f"Found {len(all_urls)} unique CNN article URLs.")
 
             # Step 2: Fetch content concurrently
             # Limit concurrency
             semaphore = asyncio.Semaphore(10)
-            
+
             async def fetch_with_sem(url):
                 async with semaphore:
                     return await self._fetch_article_content(session, url)
 
             article_tasks = [fetch_with_sem(url) for url in all_urls]
             article_results = await asyncio.gather(*article_tasks)
-            
+
             for res in article_results:
                 if res:
                     articles_data.append(res)
-                    
+
         print(f"Successfully scraped {len(articles_data)} CNN articles.")
         return articles_data
 
@@ -67,11 +67,11 @@ class CNNScraper(BaseScraper):
                 if response.status == 200:
                     html = await response.text()
                     soup = BeautifulSoup(html, 'html.parser')
-                    
+
                     for a in soup.find_all('a', href=True):
                         href = a['href']
                         full_url = urljoin(self.BASE_URL, href)
-                        
+
                         # Filter for article pattern: /YYYY/MM/DD/
                         # And ensure it's from edition.cnn.com
                         if '/202' in full_url and '/index.html' not in full_url:
@@ -80,7 +80,7 @@ class CNNScraper(BaseScraper):
                                      urls.add(full_url)
         except Exception as e:
             print(f"Error fetching section {section_url}: {e}")
-        
+
         print(f"Found {len(urls)} URLs in {section_url}")
         return list(urls)
 
@@ -90,11 +90,11 @@ class CNNScraper(BaseScraper):
                 if response.status == 200:
                     html = await response.text()
                     soup = BeautifulSoup(html, 'html.parser')
-                    
+
                     # Title
                     title_tag = soup.find('h1')
                     title = title_tag.get_text(strip=True) if title_tag else 'No Title'
-                    
+
                     # Timestamp
                     timestamp = None
                     # Try meta tag first
@@ -115,13 +115,13 @@ class CNNScraper(BaseScraper):
                     # Try generic paragraph extraction
                     # CNN often uses specific classes, but p tags are reliable enough if we filter
                     paragraphs = []
-                    
+
                     # Try to find the main article container first to avoid footer/nav text
                     # Common CNN containers: article, .article__content, .zn-body__paragraph
                     article_body = soup.find('div', class_='article__content') or \
                                    soup.find('div', class_='article-body') or \
                                    soup.find('article')
-                                   
+
                     if article_body:
                         for p in article_body.find_all('p'):
                             text = p.get_text(strip=True)
@@ -133,11 +133,17 @@ class CNNScraper(BaseScraper):
                             text = p.get_text(strip=True)
                             if text and len(text) > 20: # Filter short snippets
                                 paragraphs.append(text)
-                                
+
                     content = "\n\n".join(paragraphs)
-                    
+
                     if not content or len(content) < 50:
                         return None
+
+                    # Image
+                    image_url = None
+                    og_image = soup.find('meta', property='og:image')
+                    if og_image:
+                        image_url = og_image.get('content')
 
                     return {
                         "url": url,
@@ -145,6 +151,7 @@ class CNNScraper(BaseScraper):
                         "summary": summary,
                         "content": content,
                         "published_at": timestamp,
+                        "image_url": image_url,
                         "source": "CNN",
                         "text_hash": self.compute_hash(content)
                     }

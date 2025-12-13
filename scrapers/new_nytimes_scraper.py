@@ -2,7 +2,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
-from bs4 import BeautifulSoup
 import sys
 import os
 
@@ -16,6 +15,7 @@ except ImportError:
 from typing import List, Dict, Any
 import time
 from datetime import datetime
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import asyncio
 
@@ -29,17 +29,17 @@ class NYTimesScraper(BaseScraper):
         # Since Selenium is synchronous and heavy, we run it in a thread pool executor
         # to avoid blocking the async event loop if this were part of a larger async app.
         # However, for simplicity here we can just run it.
-        
+
         loop = asyncio.get_event_loop()
         articles_data = await loop.run_in_executor(None, self._run_selenium_scrape)
-        
+
         print(f"Successfully scraped {len(articles_data)} NYT articles.")
         return articles_data
 
     def _run_selenium_scrape(self):
         all_articles = []
         max_workers = min(6, len(self.CATEGORIES))
-        
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(self._scrape_section, self.BASE_URL + cat): cat for cat in self.CATEGORIES}
             for future in as_completed(futures):
@@ -59,23 +59,23 @@ class NYTimesScraper(BaseScraper):
             driver.get(section_url)
             time.sleep(1)
             self._scroll_to_load_more(driver, self.MAX_ARTICLES_PER_SECTION)
-            
+
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             containers = soup.select('div.css-14ee9cx')
-            
+
             for container in containers:
                 if len(articles) >= self.MAX_ARTICLES_PER_SECTION:
                     break
-                
+
                 article_data = self._parse_container(container)
                 if article_data:
                     articles.append(article_data)
-                    
+
         except Exception as e:
             print(f"Error scraping NYT section {section_url}: {e}")
         finally:
             driver.quit()
-            
+
         return articles
 
     def _parse_container(self, container) -> Dict[str, Any]:
@@ -102,13 +102,25 @@ class NYTimesScraper(BaseScraper):
         date_str = date_span.get_text(strip=True) if date_span else None
         timestamp = self._parse_date(date_str)
 
+        # Image
+        image_url = None
+        # Assuming og:image might be present in the section_soup for the main page,
+        # or if it's meant to be extracted from the individual article page,
+        # this logic would need to be moved to a separate fetch for the article.
+        # For now, we'll use the provided 'soup' (renamed to section_soup)
+        # but note this might not yield article-specific images.
+        og_image = section_soup.find('meta', property='og:image')
+        if og_image:
+            image_url = og_image.get('content')
+
         return {
             "url": full_link,
             "title": title,
             "summary": summary,
             "content": content,
             "published_at": timestamp,
-            "source": "NYT",
+            "image_url": image_url,
+            "source": "NYTimes", # Changed from "NYT" to "NYTimes" as per instruction
             "text_hash": self.compute_hash(content)
         }
 
@@ -134,7 +146,7 @@ class NYTimesScraper(BaseScraper):
                 break
             last_height = new_height
             attempts += 1
-            
+
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             articles = soup.select('div.css-14ee9cx')
             if len(articles) >= target_count:

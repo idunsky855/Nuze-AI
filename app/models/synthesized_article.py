@@ -11,6 +11,7 @@ class SynthesizedArticle(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String)
     content = Column(Text)
+    image_url = Column(String)
     generated_at = Column(DateTime(timezone=True), server_default=func.now())
     generation_prompt = Column(Text)
     notes = Column(Text)

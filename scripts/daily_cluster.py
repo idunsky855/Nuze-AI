@@ -252,6 +252,7 @@ Return ONLY the JSON object.
             synth = SynthesizedArticle(
                 title=result.get("title", "Combined News"),
                 content=generated_article,
+                image_url=source_articles[0].image_url if source_articles and hasattr(source_articles[0], 'image_url') else None,
                 generation_prompt=prompt,
                 analysis=analysis,
                 category_scores=category_scores,

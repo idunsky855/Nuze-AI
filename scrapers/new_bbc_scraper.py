@@ -3,6 +3,8 @@ import asyncio
 from bs4 import BeautifulSoup
 from typing import List, Dict, Any
 import datetime
+import sys
+import os
 
 # Handle import resolution for both script and module usage
 try:
@@ -19,33 +21,33 @@ class BBCScraper(BaseScraper):
     async def scrape(self) -> List[Dict[str, Any]]:
         print(f"Starting BBC scrape for categories: {self.CATEGORIES}")
         articles_data = []
-        
+
         async with aiohttp.ClientSession() as session:
             # Step 1: Collect URLs
             tasks = [self._fetch_category_urls(session, cat) for cat in self.CATEGORIES]
             results = await asyncio.gather(*tasks)
-            
+
             all_urls = set()
             for urls in results:
                 all_urls.update(urls)
-            
+
             print(f"Found {len(all_urls)} unique BBC article URLs.")
 
             # Step 2: Fetch Articles
             # Limit concurrency to avoid being blocked
             semaphore = asyncio.Semaphore(10)
-            
+
             async def fetch_with_sem(url):
                 async with semaphore:
                     return await self._fetch_article(session, url)
 
             article_tasks = [fetch_with_sem(url) for url in all_urls]
             article_results = await asyncio.gather(*article_tasks)
-            
+
             for res in article_results:
                 if res:
                     articles_data.append(res)
-                    
+
         print(f"Successfully scraped {len(articles_data)} BBC articles.")
         return articles_data
 
@@ -57,7 +59,7 @@ class BBCScraper(BaseScraper):
                 if response.status == 200:
                     html = await response.text()
                     soup = BeautifulSoup(html, 'html.parser')
-                    
+
                     if category == "sport":
                         # Specific logic for sport if needed, or generic
                         # The original scraper had specific logic for sport
@@ -67,7 +69,7 @@ class BBCScraper(BaseScraper):
                             if a_tag and '/articles/' in a_tag['href']:
                                 full_url = self._make_absolute(a_tag['href'])
                                 urls.append(full_url)
-                    
+
                     # Generic logic for others (and maybe sport too if it shares structure now)
                     # Original scraper used data-testid="internal-link"
                     a_tags = soup.find_all('a', attrs={'data-testid': 'internal-link'})
@@ -76,7 +78,7 @@ class BBCScraper(BaseScraper):
                         if href and '/articles/' in href:
                             full_url = self._make_absolute(href)
                             urls.append(full_url)
-                            
+
         except Exception as e:
             print(f"Error fetching BBC category {category}: {e}")
         return urls
@@ -101,12 +103,18 @@ class BBCScraper(BaseScraper):
                     time_tag = soup.find('time')
                     if time_tag and time_tag.has_attr('datetime'):
                         timestamp = time_tag['datetime']
-                    
+
+                    # Image
+                    image_url = None
+                    og_image = soup.find('meta', property='og:image')
+                    if og_image:
+                        image_url = og_image.get('content')
+
                     # Content
                     text_blocks = soup.find_all('div', attrs={'data-component': 'text-block'})
                     paragraphs = [p.get_text(strip=True) for block in text_blocks for p in block.find_all('p')]
                     content = "\n\n".join(paragraphs)
-                    
+
                     if not content:
                         return None
 
@@ -116,6 +124,8 @@ class BBCScraper(BaseScraper):
                         "summary": summary,
                         "content": content,
                         "published_at": timestamp,
+                        "published_at": timestamp,
+                        "image_url": image_url,
                         "source": "BBC",
                         "text_hash": self.compute_hash(content)
                     }

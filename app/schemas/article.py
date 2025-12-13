@@ -9,6 +9,7 @@ class ArticleResponse(BaseModel):
     source_url: Optional[str] = None
     publisher: Optional[str] = None
     published_at: Optional[datetime] = None
+    image_url: Optional[str] = None
     language: Optional[str] = None
     category_scores: Optional[List[float]] = None
 

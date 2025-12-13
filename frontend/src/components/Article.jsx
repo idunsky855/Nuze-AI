@@ -25,6 +25,16 @@ const Article = ({ article }) => {
         >
             <div className="article-content">
                 <h2 className="article-title">{article.title}</h2>
+                {article.image_url && (
+                    <div className="article-image-container">
+                        <img
+                            src={article.image_url}
+                            alt={article.title}
+                            className="article-image"
+                            onError={(e) => e.target.style.display = 'none'}
+                        />
+                    </div>
+                )}
                 <div className="article-body-container">
                     <p className="article-body">
                         {isExpanded ? article.content : `${article.content.substring(0, 150)}...`}

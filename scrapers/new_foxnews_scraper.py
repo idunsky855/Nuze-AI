@@ -16,6 +16,7 @@ from typing import List, Dict, Any
 import dateutil.parser
 import datetime
 
+
 class FoxNewsScraper(BaseScraper):
     BASE_URL = "https://www.foxnews.com"
     CATEGORIES = ["us", "politics", "world", "opinion", "media", "entertainment", "sports", "lifestyle", "health", "category/tech/artificial-intelligence"]
@@ -24,28 +25,28 @@ class FoxNewsScraper(BaseScraper):
     async def scrape(self) -> List[Dict[str, Any]]:
         print("Starting Fox News scrape...")
         articles_data = []
-        
+
         async with aiohttp.ClientSession() as session:
             # Step 1: Get links
             tasks = [self._extract_article_links(session, cat) for cat in self.CATEGORIES]
             results = await asyncio.gather(*tasks)
-            
+
             all_links = set()
             for links in results:
                 all_links.update(links)
-            
+
             print(f"Found {len(all_links)} unique Fox News article URLs.")
 
             # Step 2: Scrape articles
             semaphore = asyncio.Semaphore(10)
-            
+
             async def fetch_with_sem(url):
                 async with semaphore:
                     return await self._scrape_article(session, url)
 
             article_tasks = [fetch_with_sem(url) for url in all_links]
             article_results = await asyncio.gather(*article_tasks)
-            
+
             for res in article_results:
                 if res:
                     articles_data.append(res)
@@ -61,7 +62,7 @@ class FoxNewsScraper(BaseScraper):
                 if response.status == 200:
                     html = await response.text()
                     soup = BeautifulSoup(html, 'html.parser')
-                    
+
                     articles = soup.find_all('article', class_='article')
                     for article in articles:
                         a_tag = article.find('a', href=True)
@@ -91,7 +92,7 @@ class FoxNewsScraper(BaseScraper):
                     summary = summary_tag['content'].strip() if summary_tag else ''
 
                     article_tag = soup.find('article')
-                    
+
                     # Timestamp
                     timestamp = None
                     if article_tag:
@@ -115,15 +116,21 @@ class FoxNewsScraper(BaseScraper):
                                     timestamp = dt.isoformat() + 'Z'
                             except:
                                 pass
-                    
+
                     # Content
                     content = ""
                     if article_tag:
                         paragraphs = article_tag.find_all('p')
                         content = '\n\n'.join(p.get_text(strip=True) for p in paragraphs)
-                    
+
                     if not content:
                         return None
+
+                    # Image
+                    image_url = None
+                    og_image = soup.find('meta', property='og:image')
+                    if og_image:
+                        image_url = og_image.get('content')
 
                     return {
                         "url": url,
@@ -131,6 +138,7 @@ class FoxNewsScraper(BaseScraper):
                         "summary": summary,
                         "content": content,
                         "published_at": timestamp,
+                        "image_url": image_url,
                         "source": "Fox News",
                         "text_hash": self.compute_hash(content)
                     }

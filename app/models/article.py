@@ -11,6 +11,7 @@ class Article(Base):
     title = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     source_url = Column(String, unique=True)
+    image_url = Column(String)
     publisher = Column(String)
     published_at = Column(DateTime(timezone=True))
     language = Column(String, default='en')

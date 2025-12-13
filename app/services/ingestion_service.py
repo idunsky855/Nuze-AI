@@ -110,6 +110,7 @@ class IngestionService:
                     source_url=url,
                     publisher=article_data.get('source'),
                     published_at=published_at,
+                    image_url=article_data.get('image_url'),
                     category_scores=self._extract_category_scores(ollama_result),
                     metadata_=ollama_result
                 )
