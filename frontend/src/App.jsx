@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import './App.css'
+// import './App.css'
+import './AppModern.css'
 import Article from './components/Article'
 import SkeletonArticle from './components/SkeletonArticle'
 import Login from './components/Login'
@@ -224,43 +225,6 @@ function App() {
 
   return (
     <div className="app-container" ref={containerRef}>
-      {isLoggedIn && (
-        <div className="user-menu-container">
-          <button
-            className="user-button"
-            onClick={() => setShowMenu(!showMenu)}
-            aria-label="User Menu"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
-            </svg>
-          </button>
-          {showMenu && (
-            <div className="user-dropdown">
-              <div className="menu-header">
-                <span className="menu-username">{currentUser?.username}</span>
-              </div>
-              <div className="menu-divider"></div>
-              <button onClick={() => {
-                setShowMenu(false)
-                navigate('/profile')
-              }} className="menu-item">
-                Edit Profile
-              </button>
-              <button onClick={() => {
-                setShowMenu(false)
-                navigate('/preferences')
-              }} className="menu-item">
-                Preferences
-              </button>
-              <button onClick={handleLogout} className="menu-item">
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       <Routes>
         <Route path="/login" element={
           !isLoggedIn ?
@@ -310,30 +274,70 @@ function App() {
             ) : (
               <div>
                 <div className="feed-tabs">
-                  <button
-                    className={`tab-button ${activeTab === 'feed' ? 'active' : ''}`}
-                    onClick={() => {
-                      if (activeTab !== 'feed') {
-                        setActiveTab('feed');
-                        setArticles([]);
-                        setLoading(true);
-                      }
-                    }}
-                  >
-                    For You
-                  </button>
-                  <button
-                    className={`tab-button ${activeTab === 'read' ? 'active' : ''}`}
-                    onClick={() => {
-                      if (activeTab !== 'read') {
-                        setActiveTab('read');
-                        setArticles([]);
-                        setLoading(true);
-                      }
-                    }}
-                  >
-                    Read History
-                  </button>
+                  <div>
+                    <button
+                      className={`tab-button ${activeTab === 'feed' ? 'active' : ''}`}
+                      onClick={() => {
+                        if (activeTab !== 'feed') {
+                          setActiveTab('feed');
+                          setArticles([]);
+                          setLoading(true);
+                        }
+                      }}
+                    >
+                      For You
+                    </button>
+                    <button
+                      className={`tab-button ${activeTab === 'read' ? 'active' : ''}`}
+                      onClick={() => {
+                        if (activeTab !== 'read') {
+                          setActiveTab('read');
+                          setArticles([]);
+                          setLoading(true);
+                        }
+                      }}
+                    >
+                      Read History
+                    </button>
+                  </div>
+
+                  {isLoggedIn && (
+                    <div className="user-menu-container">
+                      <button
+                        className="user-button"
+                        onClick={() => setShowMenu(!showMenu)}
+                        aria-label="User Menu"
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
+                        </svg>
+                      </button>
+                      {showMenu && (
+                        <div className="user-dropdown">
+                          <div className="menu-header">
+                            <span className="menu-username">{currentUser?.username}</span>
+                          </div>
+                          <div className="menu-divider"></div>
+                          <button onClick={() => {
+                            setShowMenu(false)
+                            navigate('/profile')
+                          }} className="menu-item">
+                            Edit Profile
+                          </button>
+                          <button onClick={() => {
+                            setShowMenu(false)
+                            navigate('/preferences')
+                          }} className="menu-item">
+                            Preferences
+                          </button>
+                          <div className="menu-divider"></div>
+                          <button onClick={handleLogout} className="menu-item">
+                            Logout
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {articles.length === 0 && !loading && !error && (

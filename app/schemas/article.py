@@ -18,6 +18,7 @@ class ArticleResponse(BaseModel):
     language: Optional[str] = None
     category_scores: Optional[List[float]] = None
     sources: List[SourceDetail] = Field(default=[], validation_alias="sources_detail")
+    is_liked: Optional[bool] = None  # Interaction state: True=liked, False=disliked, None=no interaction
 
     # Frontend expects 'author', we map publisher to it for now
     @property

@@ -56,7 +56,10 @@ const Preferences = ({ onSave }) => {
     return (
         <div className="login-container">
             <div className="login-card preferences-card">
-                <h1 className="login-title">Content Preferences</h1>
+                <div className="profile-header">
+                    <h1 className="login-title">Content Preferences</h1>
+                    <button onClick={onSave} className="close-button">×</button>
+                </div>
                 <p className="preferences-subtitle">Fine-tune your reading experience.</p>
 
                 {msg && <div style={{ textAlign: 'center', marginBottom: '1rem', color: msg.includes('Failed') ? 'red' : 'green' }}>{msg}</div>}
