@@ -2,6 +2,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
+class SourceDetail(BaseModel):
+    title: Optional[str] = None
+    url: Optional[str] = None
+    publisher: Optional[str] = None
+
 class ArticleResponse(BaseModel):
     id: Any
     title: str
@@ -12,6 +17,7 @@ class ArticleResponse(BaseModel):
     image_url: Optional[str] = None
     language: Optional[str] = None
     category_scores: Optional[List[float]] = None
+    sources: List[SourceDetail] = Field(default=[], validation_alias="sources_detail")
 
     # Frontend expects 'author', we map publisher to it for now
     @property

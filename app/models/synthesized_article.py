@@ -28,7 +28,18 @@ class SynthesizedArticle(Base):
         return "Nuze AI"
 
     # Relationship to sources
-    sources = relationship("SynthesizedSource", back_populates="synthesized_article")
+    sources = relationship("SynthesizedSource", back_populates="synthesized_article", lazy="selectin")
+
+    @property
+    def sources_detail(self):
+        return [
+            {
+                "title": s.article.title,
+                "url": s.article.source_url,
+                "publisher": s.article.publisher
+            }
+            for s in self.sources if s.article
+        ]
 
 class SynthesizedSource(Base):
     __tablename__ = "synthesized_sources"
@@ -37,3 +48,4 @@ class SynthesizedSource(Base):
     article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True)
 
     synthesized_article = relationship("SynthesizedArticle", back_populates="sources")
+    article = relationship("Article", lazy="selectin")

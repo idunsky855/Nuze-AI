@@ -44,6 +44,32 @@ const Article = ({ article }) => {
                     {article.author && <span>By {article.author}</span>}
                     {article.published_at && <span> • {new Date(article.published_at).toLocaleDateString()}</span>}
                 </div>
+                {article.sources && article.sources.length > 0 && (
+                    <div className="article-sources">
+                        <span>Sources: </span>
+                        {article.sources.map((source, index) => {
+                            let hostname = 'Source';
+                            if (source.publisher) {
+                                hostname = source.publisher;
+                            } else if (source.url) {
+                                try {
+                                    hostname = new URL(source.url).hostname.replace('www.', '');
+                                } catch (e) {
+                                    hostname = 'Source';
+                                }
+                            }
+
+                            return (
+                                <span key={index}>
+                                    <a href={source.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                        {hostname}
+                                    </a>
+                                    {index < article.sources.length - 1 ? ', ' : ''}
+                                </span>
+                            );
+                        })}
+                    </div>
+                )}
                 {!isExpanded && <div className="read-more-hint">Tap to read more</div>}
             </div>
             <div className="interaction-buttons">
