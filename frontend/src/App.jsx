@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import './App.css'
 import Article from './components/Article'
+import SkeletonArticle from './components/SkeletonArticle'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import Onboarding from './components/Onboarding'
@@ -110,13 +111,18 @@ function App() {
     }
   }, [isLoggedIn, currentUser, location.pathname]);
 
+  const containerRef = useRef(null);
+
   // Scroll Listener for Infinite Scroll
   useEffect(() => {
     const handleScroll = () => {
       // Only scroll if on feed
       if (location.pathname !== '/') return;
 
-      if (window.innerHeight + document.documentElement.scrollTop + 1 >= document.documentElement.scrollHeight) {
+      const container = containerRef.current;
+      if (!container) return;
+
+      if (container.scrollTop + container.clientHeight + 1 >= container.scrollHeight) {
         if (hasMore && !isFetchingMore && !loading) {
           const nextPage = page + 1;
           setPage(nextPage);
@@ -125,8 +131,16 @@ function App() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, [hasMore, isFetchingMore, loading, page, location.pathname]);
 
   const [showMenu, setShowMenu] = useState(false)
@@ -202,7 +216,7 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" ref={containerRef}>
       {isLoggedIn && (
         <div className="user-menu-container">
           <button
@@ -291,7 +305,12 @@ function App() {
                 {articles.map((article, index) => (
                   <Article key={article.id || index} article={article} />
                 ))}
-                {isFetchingMore && <p style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>Loading more articles...</p>}
+                {isFetchingMore && (
+                  <>
+                    <SkeletonArticle />
+                    <SkeletonArticle />
+                  </>
+                )}
                 {!hasMore && articles.length > 0 && <p style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>You've reached the end of the feed.</p>}
               </div>
             )}
