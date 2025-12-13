@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 // import './App.css'
 import './AppModern.css'
@@ -9,7 +9,15 @@ import Signup from './components/Signup'
 import Onboarding from './components/Onboarding'
 import Preferences from './components/Preferences'
 import Profile from './components/Profile'
-import { fetchArticles, login, fetchCurrentUser, fetchReadHistory } from './api'
+import PreferenceUpdateToast from './components/PreferenceUpdateToast'
+import { fetchArticles, login, fetchCurrentUser, fetchReadHistory, fetchPreferences } from './api'
+
+const ProtectedRoute = ({ isLoggedIn, children }) => {
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />
+  }
+  return children
+}
 
 function App() {
   console.log('App rendering');
@@ -27,6 +35,18 @@ function App() {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [activeTab, setActiveTab] = useState('feed'); // 'feed' or 'read'
+
+
+  // Preference toast state
+  const [showPreferenceToast, setShowPreferenceToast] = useState(false);
+  const [oldPreferences, setOldPreferences] = useState(null);
+  const [newPreferences, setNewPreferences] = useState(null);
+
+  // Learning process visibility toggle
+  const [showLearningProcess, setShowLearningProcess] = useState(() => {
+    const saved = localStorage.getItem('showLearningProcess');
+    return saved !== null ? saved === 'true' : true; // Default to true
+  });
 
   // Initial Mount Effect - Check Token
   useEffect(() => {
@@ -120,36 +140,57 @@ function App() {
   }, [isLoggedIn, currentUser, location.pathname, activeTab]);
 
   const containerRef = useRef(null);
+  const lastScrollTopRef = useRef(0);
 
   // Scroll Listener for Infinite Scroll
   useEffect(() => {
-    const handleScroll = () => {
-      // Only scroll if on feed
-      if (location.pathname !== '/') return;
-
-      const container = containerRef.current;
-      if (!container) return;
-
-      if (container.scrollTop + container.clientHeight + 1 >= container.scrollHeight) {
-        if (hasMore && !isFetchingMore && !loading) {
-          const nextPage = page + 1;
-          setPage(nextPage);
-          loadArticles(nextPage);
-        }
-      }
-    };
-
     const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-    }
+    if (!container) return;
 
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
+    lastScrollTopRef.current = container.scrollTop; // Initialize on effect run
+
+    const handleScroll = () => {
+      if (isFetchingMore || !hasMore) return;
+
+      const currentScrollTop = container.scrollTop;
+      const scrollDelta = Math.abs(currentScrollTop - lastScrollTopRef.current);
+
+      // Hide toast if scrolled more than 400px (significant navigation)
+      if (showPreferenceToast && scrollDelta > 400) {
+        setShowPreferenceToast(false);
+      }
+
+      // Update last scroll position (debounce or use interval if needed, but simple assignment is okay here)
+      // Actually, we want to track delta relative to when the toast appeared?
+      // No, just relative to last scroll event might be too small?
+      // Wait, scroll event fires rapidly. Delta between events is small.
+      // We need to track delta relative to a start position or accumulate it?
+
+      // Let's compare to lastScrollTop but update lastScrollTop less frequently?
+      // Or simply: check if scrollTop moved significantly since toast appeared?
+      // Too complex for now. Let's strictly check if scrollTop differs from a stored "toastShownAt" position?
+      // For now, let's just use a simpler heuristic: If scroll velocity is high?
+
+      // Alternative: Just hide on ANY scroll > 50px to allow reading adjustment but hide on navigation.
+      if (showPreferenceToast && scrollDelta > 50) {
+        setShowPreferenceToast(false);
+      }
+
+      lastScrollTopRef.current = currentScrollTop;
+
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        setIsFetchingMore(true);
+        setPage(prevPage => prevPage + 1);
       }
     };
-  }, [hasMore, isFetchingMore, loading, page, location.pathname]);
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isFetchingMore, hasMore, showPreferenceToast]);
 
   const [showMenu, setShowMenu] = useState(false)
 
@@ -216,11 +257,38 @@ function App() {
     navigate('/login')
   }
 
-  const ProtectedRoute = ({ children }) => {
-    if (!isLoggedIn) {
-      return <Navigate to="/login" />
+  const handleArticleInteraction = useCallback(async (type) => {
+    console.log(`Article interaction: ${type}`);
+
+    // Fetch preferences BEFORE the interaction
+    try {
+      const beforePrefs = await fetchPreferences();
+      setOldPreferences(beforePrefs);
+
+      // Wait for backend to process the interaction (give it time to update)
+      setTimeout(async () => {
+        try {
+          const afterPrefs = await fetchPreferences();
+          setNewPreferences(afterPrefs);
+          setShowPreferenceToast(true);
+
+          // Reset toast after a delay
+          setTimeout(() => {
+            setShowPreferenceToast(false);
+          }, 4500);
+        } catch (err) {
+          console.error("Failed to fetch updated preferences for toast", err);
+        }
+      }, 800); // Delay to let backend process the interaction
+    } catch (err) {
+      console.error("Failed to fetch initial preferences for toast", err);
     }
-    return children
+  }, []);
+
+  const toggleLearningProcess = () => {
+    const newValue = !showLearningProcess;
+    setShowLearningProcess(newValue);
+    localStorage.setItem('showLearningProcess', String(newValue));
   }
 
   return (
@@ -239,19 +307,19 @@ function App() {
         } />
 
         <Route path="/onboarding" element={
-          <ProtectedRoute>
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
             <Onboarding onOnboardingComplete={handleOnboardingComplete} />
           </ProtectedRoute>
         } />
 
         <Route path="/preferences" element={
-          <ProtectedRoute>
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
             <Preferences onSave={handleSavePreferences} initialPreferences={currentUser} />
           </ProtectedRoute>
         } />
 
         <Route path="/profile" element={
-          <ProtectedRoute>
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
             <Profile
               user={currentUser}
               onUpdateProfile={handleUpdateProfile}
@@ -261,7 +329,7 @@ function App() {
         } />
 
         <Route path="/" element={
-          <ProtectedRoute>
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
             {loading ? (
               <div className="loading-container">
                 <p>Loading articles...</p>
@@ -331,6 +399,16 @@ function App() {
                             Preferences
                           </button>
                           <div className="menu-divider"></div>
+                          <button
+                            onClick={toggleLearningProcess}
+                            className="menu-item menu-item-toggle"
+                          >
+                            <span>Show Learning Process</span>
+                            <span className={`toggle-indicator ${showLearningProcess ? 'active' : ''}`}>
+                              {showLearningProcess ? '✓' : ''}
+                            </span>
+                          </button>
+                          <div className="menu-divider"></div>
                           <button onClick={handleLogout} className="menu-item">
                             Logout
                           </button>
@@ -347,10 +425,11 @@ function App() {
                 )}
 
                 {articles.map((article, index) => (
-                  <Article key={article.id || index} article={article} />
+                  <Article key={article.id || index} article={article} onInteraction={handleArticleInteraction} />
                 ))}
                 {isFetchingMore && (
                   <>
+                    <SkeletonArticle />
                     <SkeletonArticle />
                     <SkeletonArticle />
                   </>
@@ -361,6 +440,14 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
+      {/* Preference Update Toast - only show if enabled */}
+      {showLearningProcess && (
+        <PreferenceUpdateToast
+          show={showPreferenceToast}
+          oldPreferences={oldPreferences}
+          newPreferences={newPreferences}
+        />
+      )}
     </div>
   )
 }

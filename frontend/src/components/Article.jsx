@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { recordInteraction } from '../api';
 
-const Article = ({ article }) => {
+const Article = ({ article, onInteraction }) => {
     // Initialize interaction state from article data if it exists
     const [interaction, setInteraction] = useState(
         article.is_liked === true ? 'like' :
@@ -14,11 +14,24 @@ const Article = ({ article }) => {
         e.stopPropagation(); // Prevent card click
         setInteraction(type);
         recordInteraction(article.id, type);
+
+        // Notify parent of interaction for preference toast
+        if (onInteraction) {
+            onInteraction(type);
+        }
     };
 
     const toggleExpand = () => {
         if (!isExpanded) {
-            recordInteraction(article.id, 'click');
+            // Only record click/read if no stronger interaction (like/dislike) exists
+            if (!interaction) {
+                recordInteraction(article.id, 'click');
+
+                // Notify parent of click interaction for preference toast
+                if (onInteraction) {
+                    onInteraction('click');
+                }
+            }
         }
         setIsExpanded(!isExpanded);
     };
@@ -50,27 +63,34 @@ const Article = ({ article }) => {
                     {article.published_at && <span> • {new Date(article.published_at).toLocaleDateString()}</span>}
                 </div>
                 {article.sources && article.sources.length > 0 && (
-                    <div className="article-sources">
+                    <div className="article-sources" onClick={(e) => e.stopPropagation()}>
                         <span>Sources: </span>
                         {article.sources.map((source, index) => {
-                            let hostname = 'Source';
+                            // Extract hostname or use publisher or raw URL
+                            let displayText = 'Source';
                             if (source.publisher) {
-                                hostname = source.publisher;
+                                displayText = source.publisher;
                             } else if (source.url) {
                                 try {
-                                    hostname = new URL(source.url).hostname.replace('www.', '');
+                                    // Try to get clean hostname
+                                    displayText = new URL(source.url).hostname.replace(/^www\./, '');
                                 } catch (e) {
-                                    hostname = 'Source';
+                                    displayText = source.url; // Fallback to URL if parsing fails
                                 }
                             }
 
                             return (
-                                <span key={index}>
-                                    <a href={source.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                        {hostname}
+                                <React.Fragment key={index}>
+                                    <a
+                                        href={source.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="source-link"
+                                    >
+                                        {displayText}
                                     </a>
-                                    {index < article.sources.length - 1 ? ', ' : ''}
-                                </span>
+                                    {index < article.sources.length - 1 && <span className="separator">, </span>}
+                                </React.Fragment>
                             );
                         })}
                     </div>

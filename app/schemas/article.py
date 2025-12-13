@@ -38,4 +38,4 @@ class ArticleResponse(BaseModel):
               return self.generated_at
          return None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
