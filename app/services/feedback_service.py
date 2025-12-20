@@ -10,6 +10,7 @@ class FeedbackService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.user_service = UserService(db)
+        self.read_lr_ratio = 0.25 # Click is ~25% as strong as a Like
 
     async def record_feedback(self, user_id: str, article_id: str, is_liked: bool | None):
         # 1. Determine article type
@@ -174,8 +175,8 @@ class FeedbackService:
                     updated_vec[i] = val - effective_lr * update_ratio[i]
         else:
             # Click (None) -> Small Strengthen
-            # Assume click is ~25% as strong as a Like
-            effective_lr = learning_rate * 0.25
+            # Click is ~25% as strong as a Like
+            effective_lr = learning_rate * self.read_lr_ratio
             for i, val in enumerate(user_vec):
                 if article_vec[i] >= median:
                     updated_vec[i] = val + effective_lr * update_ratio[i]

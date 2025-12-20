@@ -26,10 +26,15 @@ const Onboarding = ({ onOnboardingComplete }) => {
 
     const handleCheckboxChange = (category) => {
         setFormData(prev => {
-            const prefs = prev.preferences.includes(category)
-                ? prev.preferences.filter(c => c !== category)
-                : [...prev.preferences, category];
-            return { ...prev, preferences: prefs };
+            const isSelected = prev.preferences.includes(category);
+            if (isSelected) {
+                return { ...prev, preferences: prev.preferences.filter(c => c !== category) };
+            } else {
+                if (prev.preferences.length < 3) {
+                    return { ...prev, preferences: [...prev.preferences, category] };
+                }
+                return prev;
+            }
         });
     };
 
@@ -37,6 +42,11 @@ const Onboarding = ({ onOnboardingComplete }) => {
         e.preventDefault();
         if (!formData.age || !formData.gender || !formData.location) {
             setError('Please fill in all required fields');
+            return;
+        }
+
+        if (formData.preferences.length !== 3) {
+            setError('Please select exactly 3 interests');
             return;
         }
 
@@ -104,14 +114,15 @@ const Onboarding = ({ onOnboardingComplete }) => {
                     </div>
 
                     <div className="form-group">
-                        <label>Interests (Select at least one)</label>
+                        <label>Interests (Select 3 categories)</label>
                         <div className="checkbox-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             {categories.map(cat => (
-                                <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem' }}>
+                                <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', opacity: !formData.preferences.includes(cat) && formData.preferences.length >= 3 ? 0.5 : 1 }}>
                                     <input
                                         type="checkbox"
                                         checked={formData.preferences.includes(cat)}
                                         onChange={() => handleCheckboxChange(cat)}
+                                        disabled={!formData.preferences.includes(cat) && formData.preferences.length >= 3}
                                     />
                                     {cat}
                                 </label>
