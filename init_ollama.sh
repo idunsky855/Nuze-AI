@@ -3,8 +3,8 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 
 # MODEL_TO_PULL="llama3.2"                # 3 Seconds
-# MODEL_TO_PULL="llama3.1:8b"             # 17 Seconds 
-# MODEL_TO_PULL="gpt-oss:latest"        
+# MODEL_TO_PULL="llama3.1:8b"             # 17 Seconds
+# MODEL_TO_PULL="gpt-oss:latest"
 # MODEL_TO_PULL="deepseek-r1:latest"      # 142 seconds - Didn't work properly
 MODEL_TO_PULL="phi4:latest"               # 10 seconds
 
@@ -107,7 +107,7 @@ fi
   # Check for news-combiner-modfile and create model if it exists
   if [ -f /news-combiner-modfile ]; then
     echo "Found /news-combiner-modfile in container."
-    
+
     # Best-effort: create a named model 'news-combiner' from Modfile if it doesn't already exist
     if ! "$OLLAMA_BIN" list 2>/dev/null | grep -q "^news-combiner"; then
       echo "Creating Ollama model 'news-combiner' from /news-combiner-modfile"
@@ -116,6 +116,21 @@ fi
       }
     else
       echo "Model 'news-combiner' already exists."
+    fi
+  fi
+
+  # Check for news-summarizer-modfile and create model if it exists
+  if [ -f /news-summarizer-modfile ]; then
+    echo "Found /news-summarizer-modfile in container."
+
+    # Best-effort: create a named model 'news-summarizer' from Modfile if it doesn't already exist
+    if ! "$OLLAMA_BIN" list 2>/dev/null | grep -q "^news-summarizer"; then
+      echo "Creating Ollama model 'news-summarizer' from /news-summarizer-modfile"
+      "$OLLAMA_BIN" create news-summarizer -f /news-summarizer-modfile || {
+        echo "ollama create failed for news-summarizer; continuing startup."
+      }
+    else
+      echo "Model 'news-summarizer' already exists."
     fi
   fi
 

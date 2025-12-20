@@ -1,9 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import desc
+from sqlalchemy import desc, func
+from datetime import date
 from app.models.synthesized_article import SynthesizedArticle
+from app.models.article import Article
 from app.services.user_service import UserService
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 class FeedService:
     def __init__(self, db: AsyncSession):
@@ -99,3 +104,37 @@ class FeedService:
                 pool.remove(article)
 
         return feed
+
+    async def get_top_articles(self, user_id, limit=15) -> List[Article]:
+        """
+        Fetches the top 'limit' articles based on cosine similarity to user preferences,
+        strictly without randomness. Filters by articles published today.
+        """
+        logger.debug(f"Getting top articles for user {user_id} (Limit: {limit})")
+        # Get user preferences
+        prefs, _ = await self.user_service.get_user_preferences(user_id)
+        today = date.today()
+
+        if not prefs:
+            # Fallback to latest published today
+            result = await self.db.execute(
+                select(Article)
+                .where(func.date(Article.published_at) == today)
+                .order_by(Article.published_at.desc())
+                .limit(limit)
+            )
+            res = result.scalars().all()
+            logger.info(f"User {user_id} has no preferences, returning {len(res)} recent articles.")
+            return res
+
+        # Strict similarity sort, filtered by today
+        stmt = select(Article).where(
+            func.date(Article.published_at) == today
+        ).order_by(
+            Article.category_scores.cosine_distance(prefs)
+        ).limit(limit)
+
+        result = await self.db.execute(stmt)
+        articles = result.scalars().all()
+        logger.info(f"Found {len(articles)} relevant articles for user {user_id} published today.")
+        return articles

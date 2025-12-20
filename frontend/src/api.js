@@ -78,3 +78,26 @@ export const updatePassword = async (currentPassword, newPassword) => {
     }, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const getDailySummary = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/summary/today`, { headers: getAuthHeader() });
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return null;
+        }
+        console.error("Error fetching daily summary:", error);
+        throw error;
+    }
+};
+
+export const generateDailySummary = async () => {
+    try {
+        const response = await axios.post(`${API_URL}/summary/today`, {}, { headers: getAuthHeader() });
+        return response.data;
+    } catch (error) {
+        console.error("Error generating daily summary:", error);
+        throw error;
+    }
+};

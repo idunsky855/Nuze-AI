@@ -15,10 +15,10 @@ class ContentService:
         result = await self.db.execute(select(Article).where(Article.source_url == source_url))
         if result.scalar_one_or_none():
             return None # Already exists
-        
+
         # Classify
-        category_scores = self.nlp_service.classify_article(content)
-        
+        category_scores = await self.nlp_service.classify_article(content)
+
         article = Article(
             title=title,
             content=content,

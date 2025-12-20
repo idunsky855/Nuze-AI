@@ -9,6 +9,7 @@ import Signup from './components/Signup'
 import Onboarding from './components/Onboarding'
 import Preferences from './components/Preferences'
 import Profile from './components/Profile'
+import DailySummary from './components/DailySummary'
 import PreferenceUpdateToast from './components/PreferenceUpdateToast'
 import { fetchArticles, login, fetchCurrentUser, fetchReadHistory, fetchPreferences } from './api'
 
@@ -47,6 +48,9 @@ function App() {
     const saved = localStorage.getItem('showLearningProcess');
     return saved !== null ? saved === 'true' : true; // Default to true
   });
+
+  // Daily Summary Generation State (Lifted for persistence)
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   // Initial Mount Effect - Check Token
   useEffect(() => {
@@ -367,6 +371,18 @@ function App() {
                     >
                       Read History
                     </button>
+                    <button
+                      className={`tab-button ${activeTab === 'daily' ? 'active' : ''}`}
+                      onClick={() => {
+                        if (activeTab !== 'daily') {
+                          setActiveTab('daily');
+                          setArticles([]);
+                          // setLoading(false); // DailySummary handles its own loading
+                        }
+                      }}
+                    >
+                      Daily Summary
+                    </button>
                   </div>
 
                   {isLoggedIn && (
@@ -418,15 +434,25 @@ function App() {
                   )}
                 </div>
 
-                {articles.length === 0 && !loading && !error && (
-                  <div className="empty-state">
-                    {activeTab === 'read' ? "You haven't read any articles yet." : "No articles found."}
-                  </div>
-                )}
+                {activeTab === 'daily' ? (
+                  <DailySummary
+                    user={currentUser}
+                    generating={isGeneratingSummary}
+                    setGenerating={setIsGeneratingSummary}
+                  />
+                ) : (
+                  <>
+                    {articles.length === 0 && !loading && !error && (
+                      <div className="empty-state">
+                        {activeTab === 'read' ? "You haven't read any articles yet." : "No articles found."}
+                      </div>
+                    )}
 
-                {articles.map((article, index) => (
-                  <Article key={article.id || index} article={article} onInteraction={handleArticleInteraction} />
-                ))}
+                    {articles.map((article, index) => (
+                      <Article key={article.id || index} article={article} onInteraction={handleArticleInteraction} />
+                    ))}
+                  </>
+                )}
                 {isFetchingMore && (
                   <>
                     <SkeletonArticle />
