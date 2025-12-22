@@ -23,10 +23,12 @@ const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences }) => {
   const newCategories = newPreferences.interests_vector || [];
 
   // Category names for the 10 dimensions
+  // Category names for the 10 dimensions
   const categoryNames = [
-    'Politics', 'Business', 'Technology', 'Science',
-    'Health', 'Sports', 'Entertainment', 'World',
-    'Opinion', 'Lifestyle'
+    "Politics & Law", "Economy & Business", "Science & Technology",
+    "Health & Wellness", "Education & Society", "Culture & Entertainment",
+    "Religion & Belief", "Sports", "World & International Affairs",
+    "Opinion & General News"
   ];
 
   return (
