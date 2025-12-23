@@ -52,7 +52,29 @@
         },
         "age": 16,
         "gender": "male",
-        "location": "suburban"
+        "location": "suburban",
+        "engagements": [
+            "Health & Wellness Article 3",
+            "Health & Wellness Article 12",
+            "Sports Article 1",
+            "Sports Article 5",
+            "Sports Article 9",
+            "Health & Wellness Article 8",
+            "Sports Article 15",
+            "Health & Wellness Article 2",
+            "Sports Article 11",
+            "Science & Technology Article 3",
+            "Sports Article 18",
+            "Health & Wellness Article 14",
+            "Culture & Entertainment Article 9",
+            "Sports Article 7",
+            "Health & Wellness Article 6",
+            "Sports Article 13",
+            "Health & Wellness Article 11",
+            "Sports Article 3",
+            "Economy & Business Article 5",
+            "Sports Article 16"
+        ]
     },
     {
         "name": "Carol",

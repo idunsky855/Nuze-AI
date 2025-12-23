@@ -88,6 +88,7 @@ dependencies = [
     "rich>=14.2.0",
     "pandas>=2.3.3",
     "locust>=2.32.0",
+    "matplotlib>=3.10.8",
 ]
 
 [tool.pytest.ini_options]
