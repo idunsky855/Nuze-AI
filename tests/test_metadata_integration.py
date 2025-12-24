@@ -15,6 +15,7 @@ from app.models.user import User
 from app.models.synthesized_article import SynthesizedArticle
 from app.schemas.user import UserOnboarding
 
+@pytest.mark.asyncio
 async def test_metadata_flow():
     print("Starting Metadata Verification...")
     async with AsyncSessionLocal() as db:
