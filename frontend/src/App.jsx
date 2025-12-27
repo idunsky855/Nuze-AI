@@ -495,6 +495,7 @@ function App() {
           show={showPreferenceToast}
           oldPreferences={oldPreferences}
           newPreferences={newPreferences}
+          onClose={() => setShowPreferenceToast(false)}
         />
       )}
     </div>

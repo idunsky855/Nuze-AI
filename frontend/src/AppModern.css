@@ -1105,6 +1105,25 @@
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
+  flex: 1;
+}
+
+.preference-toast-close {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.preference-toast-close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
 }
 
 .preference-toast-content {

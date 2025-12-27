@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences }) => {
+const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences, onClose }) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -10,11 +10,17 @@ const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences }) => {
       // Auto-hide after 5 seconds
       const timer = setTimeout(() => {
         setVisible(false);
+        if (onClose) onClose();
       }, 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [show, oldPreferences, newPreferences]);
+  }, [show, oldPreferences, newPreferences, onClose]);
+
+  const handleClose = () => {
+    setVisible(false);
+    if (onClose) onClose();
+  };
 
   if (!visible || !oldPreferences || !newPreferences) return null;
 
@@ -36,6 +42,7 @@ const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences }) => {
       <div className="preference-toast-header">
         <span className="preference-toast-icon">🎯</span>
         <span className="preference-toast-title">Interest Vector Updated!</span>
+        <button className="preference-toast-close" onClick={handleClose} aria-label="Close">×</button>
       </div>
       <div className="preference-toast-content">
         <p className="preference-toast-subtitle">Your 10D category preferences are adapting</p>
