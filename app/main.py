@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import logging
 
 from app.database import engine, Base
@@ -14,11 +17,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger("nuze-backend")
 
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="Nuze Backend",
     version="0.1.0",
     description="Backend for Nuze news aggregation app.",
 )
+
+# Add rate limiter state and exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Enable CORS
 app.add_middleware(
