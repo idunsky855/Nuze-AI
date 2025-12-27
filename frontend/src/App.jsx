@@ -241,6 +241,28 @@ function App() {
     try {
       const user = await fetchCurrentUser();
       setCurrentUser(user);
+
+      // Show the preference toast for onboarding (initial preferences being set)
+      // Use empty preferences as "old" to show the new user their initial vector
+      const emptyPrefs = { interests_vector: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+      setOldPreferences(emptyPrefs);
+
+      // Fetch the newly created preferences after a short delay
+      setTimeout(async () => {
+        try {
+          const newPrefs = await fetchPreferences();
+          setNewPreferences(newPrefs);
+          setShowPreferenceToast(true);
+
+          // Reset toast after a delay
+          setTimeout(() => {
+            setShowPreferenceToast(false);
+          }, 6000); // Slightly longer for onboarding
+        } catch (err) {
+          console.error("Failed to fetch onboarding preferences for toast", err);
+        }
+      }, 500);
+
       navigate('/');
     } catch (err) {
       console.error("Failed to refresh user after onboarding", err);
@@ -395,11 +417,12 @@ function App() {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                           <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" />
                         </svg>
+                        <span className="user-button-name">{currentUser?.name}</span>
                       </button>
                       {showMenu && (
                         <div className="user-dropdown">
                           <div className="menu-header">
-                            <span className="menu-username">{currentUser?.username}</span>
+                            <span className="menu-username">{currentUser?.name}</span>
                           </div>
                           <div className="menu-divider"></div>
                           <button onClick={() => {

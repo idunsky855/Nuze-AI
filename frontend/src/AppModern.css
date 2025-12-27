@@ -594,21 +594,38 @@
   background-color: var(--color-surface-elevated);
   border: 1.5px solid var(--color-border);
   color: var(--color-text-primary);
-  padding: 10px;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  padding: 8px 14px;
+  border-radius: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+.user-button svg {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.user-button-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .user-button:hover {
   background-color: var(--color-hover);
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
@@ -1000,8 +1017,12 @@
   }
 
   .user-button {
-    width: 42px;
-    height: 42px;
+    padding: 8px 12px;
+  }
+
+  .user-button-name {
+    max-width: 80px;
+    font-size: 0.8125rem;
   }
 
   .preferences-grid,
@@ -1022,8 +1043,12 @@
   }
 
   .user-button {
-    width: 40px;
-    height: 40px;
+    padding: 10px;
+    border-radius: 50%;
+  }
+
+  .user-button-name {
+    display: none;
   }
 
   .user-button svg {

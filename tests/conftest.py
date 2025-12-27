@@ -9,7 +9,8 @@ from app.config import settings
 import asyncio
 from sqlalchemy import text
 
-TEST_DATABASE_URL = settings.DATABASE_URL
+# Use a separate test database to avoid wiping production data
+TEST_DATABASE_URL = settings.DATABASE_URL.replace("/news_db", "/news_db_test")
 
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
@@ -23,7 +24,7 @@ async def db_session():
         tables = ["daily_summaries", "user_interactions", "synthesized_sources", "synthesized_articles", "article_reads", "articles", "users"]
         for table in tables:
             await conn.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE"))
-            
+
         await conn.run_sync(Base.metadata.create_all)
         # Enable vector extension
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
