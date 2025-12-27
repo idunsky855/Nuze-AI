@@ -37,7 +37,7 @@ services:
       POSTGRES_DB: news_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./scripts/init/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -55,10 +55,10 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-      - ./init_ollama.sh:/init_ollama.sh
-      - ./news-cls-modfile:/news-cls-modfile:ro
-      - ./news-combiner-modfile:/news-combiner-modfile:ro
-      - ./news-summarizer-modfile:/news-summarizer-modfile:ro
+      - ./scripts/init/init_ollama.sh:/init_ollama.sh
+      - ./scripts/init/ollama-models/news-cls-modfile:/news-cls-modfile:ro
+      - ./scripts/init/ollama-models/news-combiner-modfile:/news-combiner-modfile:ro
+      - ./scripts/init/ollama-models/news-summarizer-modfile:/news-summarizer-modfile:ro
     entrypoint: /bin/sh
     command: /init_ollama.sh
     deploy:

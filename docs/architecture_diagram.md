@@ -1,0 +1,93 @@
+# Nuze System Architecture Diagrams
+
+## System Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Application"]
+        WEB["Web App (React)"]
+        MOBILE["Mobile App"]
+    end
+
+    subgraph APIGateway["REST API Gateway (FastAPI)"]
+        AUTH["/auth"]
+        USERS["/me"]
+        FEED["/feed"]
+        SUMMARY["/summary"]
+        FEEDBACK["/feedback"]
+        INTERACTIONS["/interactions"]
+        INGEST["/ingest"]
+    end
+
+    subgraph Services["Backend Services"]
+        AuthSvc["AuthService"]
+        UserSvc["UserService"]
+        FeedSvc["FeedService"]
+        SummarySvc["SummaryService"]
+        FeedbackSvc["FeedbackService"]
+        IngestionSvc["IngestionService"]
+        ContentSvc["ContentService"]
+        NLPSvc["NLPService"]
+        LLMVal["LLMValidator"]
+    end
+
+    subgraph Scheduler["Background Scheduler"]
+        CRON["Scheduled Tasks"]
+        CLUSTER["Daily Cluster Script"]
+    end
+
+    subgraph External["External Providers"]
+        OLLAMA["Ollama LLM"]
+        NEWS["News Sources (RSS/Scraping)"]
+    end
+
+    subgraph Database["PostgreSQL + pgvector"]
+        DB[(Database)]
+    end
+
+    %% Client to API connections
+    WEB --> AUTH
+    WEB --> USERS
+    WEB --> FEED
+    WEB --> SUMMARY
+    WEB --> INTERACTIONS
+    MOBILE --> AUTH
+    MOBILE --> USERS
+    MOBILE --> FEED
+    MOBILE --> SUMMARY
+    MOBILE --> INTERACTIONS
+
+    %% API to Service connections
+    AUTH --> AuthSvc
+    USERS --> UserSvc
+    FEED --> FeedSvc
+    SUMMARY --> SummarySvc
+    FEEDBACK --> FeedbackSvc
+    INTERACTIONS --> FeedbackSvc
+    INGEST --> IngestionSvc
+
+    %% Service dependencies
+    UserSvc --> DB
+    FeedSvc --> DB
+    SummarySvc --> DB
+    SummarySvc --> NLPSvc
+    FeedbackSvc --> DB
+    IngestionSvc --> DB
+    IngestionSvc --> NLPSvc
+    ContentSvc --> NLPSvc
+    ContentSvc --> DB
+    AuthSvc --> DB
+
+    %% NLP and LLM
+    NLPSvc --> OLLAMA
+    NLPSvc --> LLMVal
+
+    %% Scheduler connections
+    CRON --> IngestionSvc
+    CRON --> CLUSTER
+    CLUSTER --> DB
+    CLUSTER --> OLLAMA
+
+    %% External data
+    IngestionSvc --> NEWS
+```

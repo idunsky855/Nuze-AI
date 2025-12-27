@@ -1,0 +1,66 @@
+erDiagram
+    User {
+        uuid id PK
+        string email UK
+        string hashed_password
+        string name
+        vector preferences "Vector(10)"
+        jsonb preferences_metadata
+        datetime created_at
+    }
+
+    Article {
+        uuid id PK
+        string title
+        text content
+        string source_url UK
+        string image_url
+        string publisher
+        datetime published_at
+        string language
+        datetime scraped_at
+        vector category_scores "Vector(10)"
+        jsonb metadata
+    }
+
+    SynthesizedArticle {
+        uuid id PK
+        string title
+        text content
+        string image_url
+        datetime generated_at
+        text generation_prompt
+        text notes
+        jsonb analysis
+        vector category_scores "Vector(10)"
+        jsonb metadata_scores
+    }
+
+    SynthesizedSource {
+        uuid synthesized_id PK,FK
+        uuid article_id PK,FK
+    }
+
+    DailySummary {
+        uuid id PK
+        uuid user_id FK
+        uuid[] article_ids
+        date date
+        datetime summary_generated_at
+        jsonb summary_text
+    }
+
+    UserInteraction {
+        uuid id PK
+        uuid user_id FK
+        uuid synthesized_article_id FK
+        boolean is_liked
+        datetime created_at
+    }
+
+    %% Relationships
+    User ||--o{ UserInteraction : "has"
+    User ||--o{ DailySummary : "receives"
+    SynthesizedArticle ||--o{ UserInteraction : "receives"
+    SynthesizedArticle ||--o{ SynthesizedSource : "has"
+    Article ||--o{ SynthesizedSource : "sources"
