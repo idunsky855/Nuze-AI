@@ -249,16 +249,25 @@ def resolve_relevant_articles(
 ) -> List[str]:
     """Map engagement labels to concrete article titles.
 
-    Engagements in the sample data are category-tagged (e.g., "Sports Article 8").
-    For real synthesized articles we treat a recommendation as relevant if its
-    dominant category matches any of the engagement prefixes or if the engagement
-    string matches the article title exactly.
+    For each engagement, we look up its dominant category and consider any
+    article with the same dominant category as relevant. This allows
+    category-based evaluation using real article titles.
     """
 
     if not engagements:
         return []
 
-    engagement_categories = {label.split(" Article")[0].strip() for label in engagements}
+    # Get the categories of articles the user actually engaged with
+    engagement_categories = set()
+    for title in engagements:
+        cat = primary_categories.get(title)
+        if cat:
+            engagement_categories.add(cat)
+
+    # If engagements are old-format "Category Article N", extract category prefix
+    if not engagement_categories:
+        engagement_categories = {label.split(" Article")[0].strip() for label in engagements}
+
     relevant = []
     candidates = ranked_items if ranked_items is not None else primary_categories.keys()
     max_matches = len(engagements)

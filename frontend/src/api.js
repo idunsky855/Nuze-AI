@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000'; // Adjust based on backend URL
+const API_URL = 'http://100.77.65.51:8000'; // Tailscale IP for remote access
 
 // Helper to get token
 const getAuthHeader = () => {
