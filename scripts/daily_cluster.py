@@ -167,7 +167,7 @@ class ClusterService:
         for i, article in enumerate(articles):
             prompt_articles += f"ARTICLE {i+1}:\n"
             prompt_articles += f"Title: {article.title}\n"
-            prompt_articles += f"Content: {article.content[:2000]}\n\n" # Truncate content to fit context
+            prompt_articles += f"Content: {article.content}\n\n"
 
         prompt = f"""Analyze the following articles, write one combined news article based only on them, and return the JSON object as specified:
 

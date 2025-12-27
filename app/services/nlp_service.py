@@ -19,7 +19,7 @@ class NLPService:
         Classifies the article and returns a vector of scores for the categories.
         """
         prompt = f"""Analyze the following article and return the JSON object with category scores:
-        {text[:2000]}
+        {text}
         """
 
         try:
