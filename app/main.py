@@ -24,6 +24,7 @@ app = FastAPI(
     title="Nuze Backend",
     version="0.1.0",
     description="Backend for Nuze news aggregation app.",
+    redirect_slashes=False,  # Prevent HTTP redirects behind HTTPS proxy
 )
 
 # Add rate limiter state and exception handler
@@ -33,7 +34,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://client.nuze.dpdns.org",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

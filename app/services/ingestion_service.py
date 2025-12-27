@@ -130,8 +130,9 @@ class IngestionService:
             return None
 
         try:
-
-            prompt = self.PROMPT_TEMPLATE.replace("{article_text}", text)
+            # Truncate text if too long for context window (simple heuristic)
+            truncated_text = text[:4000]
+            prompt = self.PROMPT_TEMPLATE.replace("{article_text}", truncated_text)
 
             response = self.client.chat(
                 model=self.MODEL_NAME,

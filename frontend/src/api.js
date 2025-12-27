@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://100.77.65.51:8000'; // Tailscale IP for remote access
+const API_URL = 'https://api.nuze.dpdns.org'; // Must be HTTPS to match client
 
 // Helper to get token
 const getAuthHeader = () => {

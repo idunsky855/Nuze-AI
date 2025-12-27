@@ -10,7 +10,7 @@ router = APIRouter(prefix="/feed", tags=["feed"])
 
 from app.schemas.article import ArticleResponse
 
-@router.get("/", response_model=List[ArticleResponse]) # Use a proper schema for Article response
+@router.get("", response_model=List[ArticleResponse]) # Use a proper schema for Article response
 async def get_feed(
     skip: int = 0,
     limit: int = 20,
