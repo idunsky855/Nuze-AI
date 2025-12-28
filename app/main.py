@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -26,6 +27,13 @@ app = FastAPI(
     description="Backend for Nuze news aggregation app.",
     redirect_slashes=False,  # Prevent HTTP redirects behind HTTPS proxy
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    origin = request.headers.get("origin")
+    logger.info(f"Incoming request: {request.method} {request.url} | Origin: {origin}")
+    response = await call_next(request)
+    return response
 
 # Add rate limiter state and exception handler
 app.state.limiter = limiter

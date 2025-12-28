@@ -386,9 +386,14 @@
 .empty-state {
   text-align: center;
   color: var(--color-text-tertiary);
-  margin-top: 4rem;
+  margin-top: 10rem;
+  padding: 0 20px;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
 }
 
 /* Skeleton loading */

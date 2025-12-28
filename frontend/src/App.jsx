@@ -467,7 +467,7 @@ function App() {
                   <>
                     {articles.length === 0 && !loading && !error && (
                       <div className="empty-state">
-                        {activeTab === 'read' ? "You haven't read any articles yet." : "No articles found."}
+                        {activeTab === 'read' ? "You haven't read any articles yet. Start reading to populate this list!" : "No articles available at the moment. Please check back later."}
                       </div>
                     )}
 
