@@ -84,7 +84,7 @@
 .article-card.expanded {
   overflow-y: auto;
   justify-content: flex-start;
-  padding-top: 100px;
+  padding-top: 120px;
   padding-bottom: 60px;
   cursor: default;
   background-color: var(--color-surface);
