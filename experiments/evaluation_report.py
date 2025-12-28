@@ -556,7 +556,6 @@ def summarize_metrics() -> Tuple[str, Dict[str, List[List[float]]]]:
         f"- **Engagement coverage**: {sum(1 for p in precisions if p > 0):d} of {len(users)} users record non-zero relevance.",
         f"- **Updates are small and aligned**: Average L2 update steps are {average(update_norms):.4f} with {average(directionality_scores):.3f} directionality agreement, showing the median-ratio updates mostly move in the same sign as article deviations.",
         f"- **Catalog breadth**: Top-{K} recommendations touch {average(coverages):.2f} of {len(CATEGORIES)} categories on average, so exploration remains concentrated.",
-        f"- **Exploration buckets**: Hit rates across the 70/20/10 best–mid–rest buckets are best={avg_best:.3f}, mid={avg_mid:.3f}, rest={avg_rest:.3f}; similar scores imply diversification doesn't materially change relevance in this sample.",
         "",
         "## Overall summary",
         f"- Mean Precision@{K}: {average(precisions):.3f}",
@@ -566,18 +565,17 @@ def summarize_metrics() -> Tuple[str, Dict[str, List[List[float]]]]:
         f"- Avg update L2 norm: {average(update_norms):.4f}",
         f"- Avg directionality agreement: {average(directionality_scores):.3f}",
         f"- Category coverage@{K}: {average(coverages):.2f} of {len(CATEGORIES)}",
-        f"- Bucket hit rates (70/20/10): best={avg_best:.3f}, mid={avg_mid:.3f}, rest={avg_rest:.3f}",
         "",
         "## Per-user breakdown",
-        "| User | Precision@K | Recall@K | nDCG@K | Weighted@K | Coverage@K | Avg Δ‖ · ‖ | Directionality | Best hit | Mid hit | Rest hit |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| User | Precision@K | Recall@K | nDCG@K | Weighted@K | Coverage@K | Avg Δ‖ · ‖ | Directionality |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
 
     for row in rows:
         report_lines.append(
             f"| {row['user']} | {row['precision']:.3f} | {row['recall']:.3f} | {row['ndcg']:.3f} | "
             f"{row['weighted_rate']:.3f} | {row['coverage']:.0f} | {row['avg_norm']:.4f} | "
-            f"{row['directionality']:.3f} | {row['best_rate']:.3f} | {row['mid_rate']:.3f} | {row['rest_rate']:.3f} |"
+            f"{row['directionality']:.3f} |"
         )
 
     return "\n".join(report_lines), user_trajectories

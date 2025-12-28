@@ -52,7 +52,29 @@
         },
         "age": 16,
         "gender": "male",
-        "location": "suburban"
+        "location": "suburban",
+        "engagements": [
+            "Denise Austin Advocates for Muscle Conditioning with Weight-Loss Injections",
+            "Aberdeen Airport Runway Incident and Advances in Longevity Research",
+            "Notable Events: Football Tributes, Sports Careers, and Tragic Incident",
+            "NFL Highlights: Chiefs' Playoff Miss and Travis Kelce's Emotional Night",
+            "Sports Roundup: Record Deals and Historic Performances",
+            "Philip Rivers' NFL Comeback and Christian Inspiration",
+            "Travis Kelce Faces Retirement Decision Amidst Personal and Professional Changes",
+            "Conservation Couple Aims to Photograph All Wild Cat Species",
+            "High-Tech Restoration of Ancient Roman Landmark and AI Tide Warning",
+            "Exploring Unanswered Mysteries in Science and Space Policy",
+            "Hollywood Returns and Royal Broadcasts Dominate Christmas",
+            "Powerball Jackpot Reaches $1.7 Billion; Winnie-the-Pooh Celebrates Centennial",
+            "Entertainment News: Pat Finn, Mick Abrahams, James Cameron in Headlines",
+            "Christmas Revival in Bethlehem and Cultural Shifts in London",
+            "Whitchurch Embankment Collapse and Royal Christmas Traditions",
+            "America250 Celebrations: AI Exhibit and Times Square Ball Drop",
+            "Water Shortages in Tanzania and Global Developments",
+            "Perry Bamonte, The Cure Member, Passes Away; Celebrities' Daughters Honor Moms",
+            "Biden's Christmas Photo Sparks Social Media Buzz; Kimmel Criticizes U.S. Politics",
+            "Diverse Cultural Endeavors: Ballet Dancer's New Theatre Company and Paris Book Market"
+        ]
     },
     {
         "name": "Carol",

@@ -244,7 +244,7 @@ function App() {
 
       // Show the preference toast for onboarding (initial preferences being set)
       // Use empty preferences as "old" to show the new user their initial vector
-      const emptyPrefs = { interests_vector: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] };
+      const emptyPrefs = { interests_vector: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5] };
       setOldPreferences(emptyPrefs);
 
       // Fetch the newly created preferences after a short delay
