@@ -28,6 +28,7 @@ class ClusterService:
         self.client = ollama.Client(host=self.OLLAMA_HOST, timeout=600) # Longer timeout for generation
 
     async def run_daily_clustering(self):
+        start_total = datetime.now()
         print("Starting daily clustering...")
         async with AsyncSessionLocal() as db:
             # 1. Fetch articles from the last 24 hours
@@ -64,9 +65,11 @@ class ClusterService:
                 return
 
             # 2. Cluster articles
+            start_cluster = datetime.now()
             # We want groups of roughly 5 articles
             groups = self.group_articles_by_size(articles, num=5)
-            print(f"Created {len(groups)} clusters.")
+            cluster_duration = (datetime.now() - start_cluster).total_seconds()
+            print(f"Created {len(groups)} clusters in {cluster_duration:.2f} seconds.")
 
             # 3. Process each group
             for i, group_ids in enumerate(groups):
@@ -87,6 +90,9 @@ class ClusterService:
                     continue
 
                 await self.process_cluster(db, target_articles)
+
+        total_duration = (datetime.now() - start_total).total_seconds()
+        print(f"Daily clustering finished in {total_duration:.2f} seconds.")
 
     def group_articles_by_size(self, articles: List[Article], num: int, random_state: int = 42) -> List[List[Any]]:
         """
@@ -167,7 +173,7 @@ class ClusterService:
         for i, article in enumerate(articles):
             prompt_articles += f"ARTICLE {i+1}:\n"
             prompt_articles += f"Title: {article.title}\n"
-            prompt_articles += f"Content: {article.content[:2000]}\n\n" # Truncate content to fit context
+            prompt_articles += f"Content: {article.content}\n\n" # Truncate content to fit context
 
         prompt = f"""Analyze the following articles, write one combined news article based only on them, and return the JSON object as specified:
 
@@ -179,11 +185,14 @@ Return ONLY the JSON object.
 
         self.logger.info(f"Sending {len(articles)} articles to Ollama...")
         try:
+            start_ollama = datetime.now()
             response = self.client.chat(
                 model=self.MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
                 stream=False
             )
+            ollama_duration = (datetime.now() - start_ollama).total_seconds()
+            self.logger.info(f"Ollama generation finished in {ollama_duration:.2f} seconds.")
 
             raw_response = response.message.content
             result = self._parse_ollama_json(raw_response)

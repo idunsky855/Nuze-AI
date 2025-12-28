@@ -89,6 +89,7 @@ dependencies = [
     "pandas>=2.3.3",
     "locust>=2.32.0",
     "matplotlib>=3.10.8",
+    "slowapi>=0.1.9",
 ]
 
 [tool.pytest.ini_options]

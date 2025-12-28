@@ -36,19 +36,28 @@ class IngestionService:
         ]
 
     async def run_daily_ingestion(self, dry_run=False):
+        start_total = datetime.now()
         logger.info(f"Starting daily ingestion (Dry Run: {dry_run})...")
 
         for scraper in self.scrapers:
             try:
+                start_scrape = datetime.now()
                 articles = await scraper.scrape()
-                logger.info(f"Processing {len(articles)} articles from {scraper.__class__.__name__}")
+                scrape_duration = (datetime.now() - start_scrape).total_seconds()
+                logger.info(f"Scraped {len(articles)} articles from {scraper.__class__.__name__} in {scrape_duration:.2f} seconds")
 
+                start_process = datetime.now()
                 for article_data in articles:
                     await self.process_article(article_data, dry_run=dry_run)
+                process_duration = (datetime.now() - start_process).total_seconds()
+                logger.info(f"Processed {len(articles)} articles from {scraper.__class__.__name__} in {process_duration:.2f} seconds")
 
             except Exception as e:
                 logger.error(f"Error running scraper {scraper.__class__.__name__}: {e}")
                 logger.debug(traceback.format_exc())
+
+        total_duration = (datetime.now() - start_total).total_seconds()
+        logger.info(f"Daily ingestion finished in {total_duration:.2f} seconds.")
 
     async def process_article(self, article_data, dry_run=False):
         url = article_data.get('url')
@@ -131,8 +140,8 @@ class IngestionService:
 
         try:
             # Truncate text if too long for context window (simple heuristic)
-            truncated_text = text[:4000]
-            prompt = self.PROMPT_TEMPLATE.replace("{article_text}", truncated_text)
+            # truncated_text = text[:4000]
+            prompt = self.PROMPT_TEMPLATE.replace("{article_text}", text)
 
             response = self.client.chat(
                 model=self.MODEL_NAME,
