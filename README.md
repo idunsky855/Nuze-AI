@@ -145,30 +145,52 @@ nuze-backend/
 
 ## 🚀 Quick Start
 
+### 🌐 Live Demo
+
+The application is already deployed and running at **[client.nuze.dpdns.org](https://client.nuze.dpdns.org)**.
+
 ### Prerequisites
 - Docker & Docker Compose
 - NVIDIA GPU (for Ollama, optional but recommended)
 
-### 1. Clone & Start
+### 1. Clone & Install
 
 ```bash
 git clone <repository-url>
 cd nuze-backend
-docker compose up -d
 ```
 
-### 2. Access the Application
+### 2. Choose Your Mode
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000 |
-| API Docs | http://localhost:8000/docs |
-| Ollama | http://localhost:11434 |
+The application can run in two modes:
 
-### 3. Initial Setup
+| Mode | Script | Use Case |
+|------|--------|----------|
+| **Production** | `./run-prod.sh` | Connects to the live API server (`api.nuze.dpdns.org`) and production database. Use this to interact with real data. |
+| **Development** | `./run-dev.sh` | Connects to local backend (`localhost:8000`) with hot reload. Use this for frontend development and testing. |
 
-On first run, the system will:
+> [!IMPORTANT]
+> To communicate with the actual server and database, run **production mode** (`./run-prod.sh`).
+> Development mode uses a local backend and is intended for local development only.
+
+```bash
+# Production mode - connects to live API
+./run-prod.sh
+
+# Development mode - local backend with hot reload
+./run-dev.sh
+```
+
+### 3. Access the Application
+
+| Mode | Frontend | Backend API | API Docs |
+|------|----------|-------------|----------|
+| Production | http://localhost:5173 | https://api.nuze.dpdns.org | https://api.nuze.dpdns.org/docs |
+| Development | http://localhost:5174 | http://localhost:8000 | http://localhost:8000/docs |
+
+### 4. Initial Setup (Development Mode Only)
+
+When running in development mode, on first run the system will:
 1. Initialize PostgreSQL with pgvector extension
 2. Pull and configure Ollama models (phi4 base + custom models)
 3. Create database tables via SQLAlchemy
@@ -286,6 +308,17 @@ npm run dev
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://...` |
 | `OLLAMA_HOST` | Ollama server URL | `http://ollama:11434` |
+| `VITE_API_URL` | Frontend API URL | `http://localhost:8000` |
+
+### Frontend Development Modes
+
+The frontend can run in **production** or **development** mode:
+
+| Mode | Command | Frontend URL | API URL | Description |
+|------|---------|--------------|---------|-------------|
+| **Production** | `./run-prod.sh` | http://localhost:5173 | `https://api.nuze.dpdns.org` | Nginx serving static build |
+| **Dev (Docker)** | `./run-dev.sh` | http://localhost:5174 | `http://localhost:8000` | Vite dev server with hot reload |
+| **Dev (Local)** | `cd frontend && npm run dev` | http://localhost:5173 | `http://localhost:8000` | Vite dev server locally |
 
 ---
 
