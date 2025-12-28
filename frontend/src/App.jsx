@@ -257,7 +257,7 @@ function App() {
           // Reset toast after a delay
           setTimeout(() => {
             setShowPreferenceToast(false);
-          }, 6000); // Slightly longer for onboarding
+          }, 10000); // 10 seconds for onboarding
         } catch (err) {
           console.error("Failed to fetch onboarding preferences for toast", err);
         }
