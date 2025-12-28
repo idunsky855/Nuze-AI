@@ -16,6 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
 )
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 logger = logging.getLogger("nuze-backend")
 
 # Rate limiter setup

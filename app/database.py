@@ -11,7 +11,7 @@ DATABASE_URL = settings.DATABASE_URL
 
 print("DEBUG: app.database module imported", file=sys.stderr)
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=False)
 
 @event.listens_for(engine.sync_engine, "connect")
 def connect(dbapi_connection, connection_record):
