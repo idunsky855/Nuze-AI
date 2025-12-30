@@ -19,7 +19,7 @@ class NLPService:
         Classifies the article and returns a vector of scores for the categories.
         """
         prompt = f"""Analyze the following article and return the JSON object with category scores:
-        {text[:3000]}
+        {text}
         """
 
         try:
@@ -63,7 +63,10 @@ class NLPService:
     async def summarize_articles(self, articles_text: List[str], user_preferences: dict = None) -> str:
         """
         Summarizes a list of articles using the news-summarizer model.
+        Includes a validation retry loop (up to 3 attempts).
         """
+        from app.services.llm_validator import validate_summary_output
+
         logger.info(f"Summarizing {len(articles_text)} articles with preferences: {user_preferences}")
         model = "news-summarizer"
 
@@ -92,23 +95,42 @@ Structure:
 Output ONLY valid JSON.
 """
 
-        try:
-            response = await self.client.chat(
-                model=model,
-                messages=[{"role": "user", "content": explicit_prompt}],
-                stream=False
-            )
-            raw_content = response.message.content
-            # Clean up potential markdown code blocks
-            cleaned = raw_content.strip()
-            if cleaned.startswith("```"):
-                # Find the first opening brace
-                start = cleaned.find("{")
-                # Find the last closing brace
-                end = cleaned.rfind("}")
-                if start != -1 and end != -1:
-                    cleaned = cleaned[start:end+1]
-            return cleaned
-        except Exception as e:
-            logger.error(f"Error summarizing articles: {e}")
-            return "Failed to generate summary."
+        # Retry loop with validation
+        for attempt in range(3):
+            try:
+                logger.debug(f"Summary generation attempt {attempt + 1}/3")
+                response = await self.client.chat(
+                    model=model,
+                    messages=[{"role": "user", "content": explicit_prompt}],
+                    stream=False
+                )
+                raw_content = response.message.content
+
+                # Clean up potential markdown code blocks
+                cleaned = raw_content.strip()
+                if cleaned.startswith("```"):
+                    start = cleaned.find("{")
+                    end = cleaned.rfind("}")
+                    if start != -1 and end != -1:
+                        cleaned = cleaned[start:end+1]
+
+                # Parse JSON
+                try:
+                    result = json.loads(cleaned)
+                except json.JSONDecodeError as je:
+                    logger.warning(f"JSON parse error on attempt {attempt + 1}: {je}")
+                    continue
+
+                # Validate structure
+                is_valid, error_msg = validate_summary_output(result)
+                if is_valid:
+                    logger.info(f"Summary validation passed on attempt {attempt + 1}")
+                    return cleaned
+                else:
+                    logger.warning(f"Summary validation failed on attempt {attempt + 1}: {error_msg}")
+
+            except Exception as e:
+                logger.error(f"Error summarizing articles on attempt {attempt + 1}: {e}")
+
+        logger.error("Failed to generate valid summary after 3 attempts.")
+        return json.dumps({"error": "Failed to generate summary after 3 attempts."})

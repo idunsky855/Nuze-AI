@@ -318,7 +318,7 @@ function App() {
   }
 
   return (
-    <div className="app-container" ref={containerRef}>
+    <div className={`app-container ${activeTab === 'daily' ? 'no-scroll' : ''}`} ref={containerRef}>
       <Routes>
         <Route path="/login" element={
           !isLoggedIn ?

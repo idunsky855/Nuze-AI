@@ -44,6 +44,11 @@
   scroll-snap-type: y mandatory;
 }
 
+.app-container.no-scroll {
+  overflow: hidden;
+  scroll-snap-type: none;
+}
+
 .app-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -1251,7 +1256,46 @@
     width: calc(100% - 2rem);
     left: 1rem;
     bottom: 1rem;
-    max-height: calc(100vh - 2rem);
+    max-height: 40vh;
+    padding: 12px;
+  }
+
+  .preference-toast-header {
+    margin-bottom: 8px;
+  }
+
+  .preference-toast-icon {
+    font-size: 1rem;
+  }
+
+  .preference-toast-title {
+    font-size: 0.8125rem;
+  }
+
+  .preference-toast-subtitle {
+    font-size: 0.6875rem;
+    margin-bottom: 8px;
+  }
+
+  .preference-bars {
+    gap: 8px;
+  }
+
+  .preference-bar-item {
+    gap: 4px;
+  }
+
+  .preference-bar-name {
+    font-size: 0.6875rem;
+  }
+
+  .preference-bar-value {
+    font-size: 0.625rem;
+    padding: 1px 6px;
+  }
+
+  .preference-bar-track {
+    height: 4px;
   }
 }
 
@@ -1496,6 +1540,7 @@
 .summary-body {
   font-size: 1.1rem;
   margin-bottom: 32px;
+  color: var(--color-text-primary);
 }
 
 .summary-key-points {

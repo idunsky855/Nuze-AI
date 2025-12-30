@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc, func
-from datetime import date
+from datetime import date, datetime, timedelta
 from app.models.synthesized_article import SynthesizedArticle
 from app.models.article import Article
 from app.services.user_service import UserService
@@ -113,13 +113,15 @@ class FeedService:
         logger.debug(f"Getting top articles for user {user_id} (Limit: {limit})")
         # Get user preferences
         prefs, _ = await self.user_service.get_user_preferences(user_id)
-        today = date.today()
+        
+        # Calculate 24-hour cutoff
+        cutoff_time = datetime.now() - timedelta(hours=24)
 
         if not prefs:
-            # Fallback to latest published today
+            # Fallback to latest published in last 24h
             result = await self.db.execute(
                 select(Article)
-                .where(func.date(Article.published_at) == today)
+                .where(Article.published_at >= cutoff_time)
                 .order_by(Article.published_at.desc())
                 .limit(limit)
             )
@@ -127,14 +129,14 @@ class FeedService:
             logger.info(f"User {user_id} has no preferences, returning {len(res)} recent articles.")
             return res
 
-        # Strict similarity sort, filtered by today
+        # Strict similarity sort, filtered by last 24h
         stmt = select(Article).where(
-            func.date(Article.published_at) == today
+            Article.published_at >= cutoff_time
         ).order_by(
             Article.category_scores.cosine_distance(prefs)
         ).limit(limit)
 
         result = await self.db.execute(stmt)
         articles = result.scalars().all()
-        logger.info(f"Found {len(articles)} relevant articles for user {user_id} published today.")
+        logger.info(f"Found {len(articles)} relevant articles for user {user_id} published in last 24h.")
         return articles

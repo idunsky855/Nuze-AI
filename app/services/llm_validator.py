@@ -151,3 +151,64 @@ def validate_output(result: dict):
     # All checks passed
     # -----------------------------
     return True, None
+
+
+def validate_summary_output(result: dict):
+    """
+    Validate a summary output from the LLM.
+    Expected structure:
+    {
+        "greeting": "...",
+        "summary": "...",
+        "key_points": ["...", "..."]
+    }
+    Returns: (bool, error_message)
+    """
+    # -----------------------------
+    # 1. Correct type
+    # -----------------------------
+    if not isinstance(result, dict):
+        return False, "Output is not a Python dictionary."
+
+    # -----------------------------
+    # 2. Check required keys exist
+    # -----------------------------
+    required_keys = ["greeting", "summary", "key_points"]
+    for key in required_keys:
+        if key not in result:
+            return False, f"Missing required key: '{key}'."
+
+    # -----------------------------
+    # 3. Validate greeting
+    # -----------------------------
+    if not isinstance(result["greeting"], str):
+        return False, "Field 'greeting' must be a string."
+    if len(result["greeting"].strip()) == 0:
+        return False, "Field 'greeting' cannot be empty."
+
+    # -----------------------------
+    # 4. Validate summary
+    # -----------------------------
+    if not isinstance(result["summary"], str):
+        return False, "Field 'summary' must be a string."
+    if len(result["summary"].strip()) < 50:
+        return False, "Field 'summary' is too short (minimum 50 characters)."
+
+    # -----------------------------
+    # 5. Validate key_points
+    # -----------------------------
+    key_points = result["key_points"]
+    if not isinstance(key_points, list):
+        return False, "Field 'key_points' must be a list."
+    if len(key_points) == 0:
+        return False, "Field 'key_points' cannot be empty."
+    for i, point in enumerate(key_points):
+        if not isinstance(point, str):
+            return False, f"key_points[{i}] must be a string."
+        if len(point.strip()) == 0:
+            return False, f"key_points[{i}] cannot be empty."
+
+    # -----------------------------
+    # All checks passed
+    # -----------------------------
+    return True, None
