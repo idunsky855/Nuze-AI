@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Date, func, ForeignKey, ARRAY, Text
+from sqlalchemy import Column, DateTime, Date, String, func, ForeignKey, ARRAY, Text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.database import Base
 import uuid
@@ -12,3 +12,4 @@ class DailySummary(Base):
     summary_generated_at = Column(DateTime(timezone=True), server_default=func.now())
     date = Column(Date, default=func.current_date())
     summary_text = Column(JSONB)
+    status = Column(String, default="pending")  # pending, completed, failed

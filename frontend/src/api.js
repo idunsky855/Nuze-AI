@@ -101,3 +101,14 @@ export const generateDailySummary = async () => {
         throw error;
     }
 };
+
+export const updateProfile = async (profileData) => {
+    const response = await axios.put(`${API_URL}/me`, {
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        age: profileData.age ? parseInt(profileData.age) : null,
+        gender: profileData.gender || null,
+        location: profileData.location || null
+    }, { headers: getAuthHeader() });
+    return response.data;
+};

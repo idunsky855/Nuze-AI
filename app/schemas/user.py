@@ -20,6 +20,11 @@ class Token(BaseModel):
 class UserResponse(UserBase):
     id: UUID
     name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    location: Optional[str] = None
     is_onboarded: bool = False
 
     class Config:
@@ -34,3 +39,10 @@ class UserOnboarding(BaseModel):
 class UserPasswordUpdate(BaseModel):
     current_password: str
     new_password: str
+
+class UserProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    location: Optional[str] = None

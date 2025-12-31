@@ -11,7 +11,7 @@ import Preferences from './components/Preferences'
 import Profile from './components/Profile'
 import DailySummary from './components/DailySummary'
 import PreferenceUpdateToast from './components/PreferenceUpdateToast'
-import { fetchArticles, login, fetchCurrentUser, fetchReadHistory, fetchPreferences } from './api'
+import { fetchArticles, login, fetchCurrentUser, fetchReadHistory, fetchPreferences, updateProfile } from './api'
 
 const ProtectedRoute = ({ isLoggedIn, children }) => {
   if (!isLoggedIn) {
@@ -231,9 +231,22 @@ function App() {
     navigate('/')
   }
 
-  const handleUpdateProfile = (updatedData) => {
-    const updatedUser = { ...currentUser, ...updatedData }
-    setCurrentUser(updatedUser)
+  const handleUpdateProfile = async (updatedData) => {
+    try {
+      const response = await updateProfile(updatedData);
+      // Map snake_case from API to state
+      const updatedUser = {
+        ...currentUser,
+        first_name: response.first_name,
+        last_name: response.last_name,
+        age: response.age,
+        gender: response.gender,
+        location: response.location
+      };
+      setCurrentUser(updatedUser);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    }
   }
 
   const handleOnboardingComplete = async () => {

@@ -13,10 +13,22 @@ const DailySummary = ({ user, generating, setGenerating }) => {
     try {
       setLoading(true);
       const data = await getDailySummary();
-      setSummary(data);
+      if (data && data.status === 'pending') {
+        // Summary is being generated - show generating state
+        setGenerating(true);
+        setSummary(null);
+      } else {
+        setSummary(data);
+        setGenerating(false);
+      }
     } catch (err) {
-      console.error("Error loading summary:", err);
-      setError("Failed to load daily summary.");
+      // 404 means no summary yet - that's fine
+      if (err.response && err.response.status === 404) {
+        setSummary(null);
+      } else {
+        console.error("Error loading summary:", err);
+        setError("Failed to load daily summary.");
+      }
     } finally {
       setLoading(false);
     }
@@ -31,15 +43,27 @@ const DailySummary = ({ user, generating, setGenerating }) => {
     setError(null);
     try {
       const data = await generateDailySummary();
-      setSummary(data);
+      if (data && data.summary_text && data.status === 'completed') {
+        setSummary(data);
+        setGenerating(false);
+      } else {
+        // If response is empty or pending, try fetching again
+        await loadSummary();
+      }
     } catch (e) {
-      if (e.response && e.response.status === 404) {
+      if (e.response && e.response.status === 202) {
+        // Already generating - show generating state
+        setGenerating(true);
+      } else if (e.response && e.response.status === 404) {
         setError("Could not generate summary (no relevant articles found for today).");
+        setGenerating(false);
+      } else if (e.response && e.response.status === 500) {
+        setError("Failed to generate summary. The AI model may be unavailable. Please try again.");
+        setGenerating(false);
       } else {
         setError("Failed to generate summary. Please try again.");
+        setGenerating(false);
       }
-    } finally {
-      setGenerating(false);
     }
   };
 
@@ -76,12 +100,17 @@ const DailySummary = ({ user, generating, setGenerating }) => {
           <p className="generating-hint">This may take up to a few minutes</p>
         </div>
       ) : (
-        <button
-          className="generate-summary-btn"
-          onClick={handleGenerate}
-        >
-          Generate Daily Summary
-        </button>
+        <>
+          <p className="style-preferences-hint">
+            💡 Tip: Customize your summary style in your <strong>Profile → Preferences</strong>
+          </p>
+          <button
+            className="generate-summary-btn"
+            onClick={handleGenerate}
+          >
+            Generate Daily Summary
+          </button>
+        </>
       )}
       {error && (
         <div className="summary-error-container">

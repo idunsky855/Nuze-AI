@@ -122,7 +122,8 @@ class FeedbackService:
         # Convert back to dict
         new_meta_dict = self._get_metadata_dict(new_meta_vec)
 
-        await self.user_service.update_user_preferences(user_id, new_cat_vec.tolist(), new_meta_dict)
+        # Only update category vector, not metadata (user manually sets style preferences)
+        await self.user_service.update_user_preferences(user_id, new_cat_vec.tolist(), None)
 
     def _get_metadata_vector(self, meta_dict: dict) -> np.array:
         order = ["Length", "Complexity", "Neutral", "Informative", "Emotional"]

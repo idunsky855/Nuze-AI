@@ -108,6 +108,11 @@ async def get_current_user_profile(
         "id": user.id,
         "email": user.email,
         "name": user.name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "age": user.age,
+        "gender": user.gender,
+        "location": user.location,
         "is_onboarded": is_onboarded
     }
 
@@ -134,6 +139,48 @@ async def update_password(
     await db.commit()
 
     return {"message": "Password updated successfully"}
+
+from app.schemas.user import UserProfileUpdate
+
+@router.put("", response_model=UserResponse)
+async def update_profile(
+    profile_data: UserProfileUpdate,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update only the fields that were provided
+    if profile_data.first_name is not None:
+        user.first_name = profile_data.first_name
+    if profile_data.last_name is not None:
+        user.last_name = profile_data.last_name
+    if profile_data.age is not None:
+        user.age = profile_data.age
+    if profile_data.gender is not None:
+        user.gender = profile_data.gender
+    if profile_data.location is not None:
+        user.location = profile_data.location
+
+    await db.commit()
+    await db.refresh(user)
+
+    is_onboarded = user.preferences is not None
+    return {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "age": user.age,
+        "gender": user.gender,
+        "location": user.location,
+        "is_onboarded": is_onboarded
+    }
 
 from typing import List
 from app.schemas.article import ArticleResponse

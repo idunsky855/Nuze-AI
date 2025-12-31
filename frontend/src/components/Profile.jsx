@@ -3,8 +3,8 @@ import { updatePassword } from '../api';
 
 const Profile = ({ user, onUpdateProfile, onCancel }) => {
     const [formData, setFormData] = useState({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        firstName: user.first_name || user.firstName || '',
+        lastName: user.last_name || user.lastName || '',
         age: user.age || '',
         gender: user.gender || '',
         location: user.location || ''

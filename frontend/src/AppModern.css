@@ -1650,3 +1650,14 @@
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
+
+.style-preferences-hint {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.style-preferences-hint strong {
+  color: var(--color-accent);
+}

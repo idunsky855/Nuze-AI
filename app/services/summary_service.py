@@ -70,7 +70,12 @@ class SummaryService:
             summary_data = json.loads(summary_json)
         except json.JSONDecodeError:
             logger.error(f"Failed to parse summary JSON: {summary_json}")
-            summary_data = {"error": "Failed to parse summary", "raw": summary_json}
+            return None  # Don't save failed summaries - let user retry
+
+        # Check if the summary contains an error
+        if isinstance(summary_data, dict) and "error" in summary_data:
+            logger.error(f"Summary generation failed: {summary_data.get('error')}")
+            return None  # Don't save failed summaries - let user retry
 
         # Inject top article image (find first one with an image)
         top_image_url = None
@@ -88,7 +93,8 @@ class SummaryService:
             user_id=user_id,
             article_ids=article_ids,
             summary_text=summary_data,
-            date=date.today()
+            date=date.today(),
+            status="completed"
         )
         self.db.add(summary)
         await self.db.commit()

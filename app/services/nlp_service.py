@@ -2,16 +2,20 @@ import ollama
 from typing import List, Dict
 import json
 import logging
+import httpx
 
 import os
 
 logger = logging.getLogger(__name__)
 
+# Timeout for Ollama requests (5 minutes for large summaries)
+OLLAMA_TIMEOUT = httpx.Timeout(300.0, connect=10.0)
+
 class NLPService:
     def __init__(self, model_name="news-classifier", host=None):
         if host is None:
             host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-        self.client = ollama.AsyncClient(host=host)
+        self.client = ollama.AsyncClient(host=host, timeout=OLLAMA_TIMEOUT)
         self.model_name = model_name
 
     async def classify_article(self, text: str) -> List[float]:
