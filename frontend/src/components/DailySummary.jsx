@@ -72,7 +72,8 @@ const DailySummary = ({ user, generating, setGenerating }) => {
       {generating ? (
         <div className="generating-container">
           <div className="spinner"></div>
-          <p>Generating your personalized summary...</p>
+          <p className="generating-text">Generating your personalized summary...</p>
+          <p className="generating-hint">This may take up to a few minutes</p>
         </div>
       ) : (
         <button
@@ -82,7 +83,14 @@ const DailySummary = ({ user, generating, setGenerating }) => {
           Generate Daily Summary
         </button>
       )}
-      {error && <p className="error-text">{error}</p>}
+      {error && (
+        <div className="summary-error-container">
+          <p className="error-text">{error}</p>
+          <button className="retry-btn" onClick={handleGenerate}>
+            Try Again
+          </button>
+        </div>
+      )}
     </div>
   );
 };

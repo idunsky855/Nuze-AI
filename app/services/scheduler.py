@@ -99,10 +99,12 @@ async def run_daily_ingest():
 
 async def start_scheduler():
     # Schedule jobs
-    # Schedule jobs
-    # Run daily ingest at 20:00 UTC
-    trigger = CronTrigger(hour=20, minute=00)
-    scheduler.add_job(run_daily_ingest, trigger)
+    # Run daily ingest twice a day at 06:00 and 18:00 UTC
+    morning_trigger = CronTrigger(hour=6, minute=0)
+    evening_trigger = CronTrigger(hour=18, minute=0)
+    
+    scheduler.add_job(run_daily_ingest, morning_trigger, id="daily_ingest_morning")
+    scheduler.add_job(run_daily_ingest, evening_trigger, id="daily_ingest_evening")
 
     scheduler.start()
-    logger.info("Scheduler started.")
+    logger.info("Scheduler started. Jobs scheduled at 06:00 and 18:00 UTC.")

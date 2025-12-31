@@ -467,7 +467,19 @@ function App() {
                   <>
                     {articles.length === 0 && !loading && !error && (
                       <div className="empty-state">
-                        {activeTab === 'read' ? "You haven't read any articles yet. Start reading to populate this list!" : "No articles available at the moment. Please check back later."}
+                        <p className="empty-state-text">
+                          {activeTab === 'read'
+                            ? "You haven't read any articles yet. Start reading to populate this list!"
+                            : "No articles available at the moment."}
+                        </p>
+                        {activeTab === 'feed' && (
+                          <button
+                            className="retry-btn"
+                            onClick={() => { setPage(0); setHasMore(true); loadArticles(0, true); }}
+                          >
+                            Refresh Feed
+                          </button>
+                        )}
                       </div>
                     )}
 

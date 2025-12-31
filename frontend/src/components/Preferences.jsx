@@ -94,6 +94,7 @@ const Preferences = ({ onSave }) => {
                                     <span>Brief</span>
                                     <span>Detailed</span>
                                 </div>
+                                <p className="preference-description">Controls how detailed your daily summary and articles are. Brief gives quick highlights, Detailed provides in-depth coverage.</p>
                             </div>
 
                             <div className="preference-group">
@@ -119,6 +120,7 @@ const Preferences = ({ onSave }) => {
                                     <span>Simple</span>
                                     <span>Deep</span>
                                 </div>
+                                <p className="preference-description">Adjusts vocabulary and depth. Simple uses everyday language, Deep includes technical terms and nuanced analysis.</p>
                             </div>
                         </div>
 
@@ -144,6 +146,7 @@ const Preferences = ({ onSave }) => {
                                         className="preference-slider"
                                     />
                                 </div>
+                                <p className="preference-description">Higher values favor strictly factual, balanced reporting without opinion.</p>
                             </div>
 
                             <div className="preference-group">
@@ -164,6 +167,7 @@ const Preferences = ({ onSave }) => {
                                         className="preference-slider"
                                     />
                                 </div>
+                                <p className="preference-description">Higher values emphasize data, statistics, and detailed explanations.</p>
                             </div>
 
                             <div className="preference-group">
@@ -184,6 +188,7 @@ const Preferences = ({ onSave }) => {
                                         className="preference-slider"
                                     />
                                 </div>
+                                <p className="preference-description">Higher values allow more expressive, engaging storytelling in articles.</p>
                             </div>
                         </div>
                     </div>
