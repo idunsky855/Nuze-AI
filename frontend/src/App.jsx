@@ -36,6 +36,7 @@ function App() {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [activeTab, setActiveTab] = useState('feed'); // 'feed' or 'read'
+  const [showScrollHint, setShowScrollHint] = useState(true); // Shows scroll down indicator
 
 
   // Preference toast state
@@ -180,6 +181,11 @@ function App() {
         setShowPreferenceToast(false);
       }
 
+      // Hide scroll hint after user scrolls
+      if (showScrollHint && currentScrollTop > 50) {
+        setShowScrollHint(false);
+      }
+
       lastScrollTopRef.current = currentScrollTop;
 
       const scrollTop = container.scrollTop;
@@ -194,7 +200,7 @@ function App() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isFetchingMore, hasMore, showPreferenceToast]);
+  }, [isFetchingMore, hasMore, showPreferenceToast, showScrollHint]);
 
   const [showMenu, setShowMenu] = useState(false)
 
@@ -499,6 +505,18 @@ function App() {
                     {articles.map((article, index) => (
                       <Article key={article.id || index} article={article} onInteraction={handleArticleInteraction} />
                     ))}
+
+                    {/* Scroll Down Indicator */}
+                    {showScrollHint && articles.length > 0 && hasMore && activeTab === 'feed' && (
+                      <div className="scroll-hint-indicator" onClick={() => setShowScrollHint(false)}>
+                        <div className="scroll-hint-content">
+                          <span className="scroll-hint-text">Scroll for more</span>
+                          <svg className="scroll-hint-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 5v14M5 12l7 7 7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
                 {isFetchingMore && (

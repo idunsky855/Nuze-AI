@@ -50,6 +50,22 @@ done
 
 echo "Ollama server is ready."
 
+# Validate GPU is available - abort if running CPU-only
+echo "Checking GPU availability..."
+if command -v nvidia-smi > /dev/null 2>&1; then
+  if nvidia-smi > /dev/null 2>&1; then
+    echo "✓ GPU detected and accessible:"
+    nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+  else
+    echo "ERROR: nvidia-smi exists but GPU is not accessible!"
+    echo "This container is running CPU-only which will cause severe performance issues."
+    echo "Please restart Docker and re-create this container with proper GPU access."
+    exit 1
+  fi
+else
+  echo "WARNING: nvidia-smi not found - GPU support may not be available"
+fi
+
 # Check if the model exists, pull if not
 echo "Checking for model: $MODEL_TO_PULL"
 # Use grep -q for quiet check, exit code 0 if found, 1 if not
