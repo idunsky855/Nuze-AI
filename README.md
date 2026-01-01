@@ -254,6 +254,54 @@ The system uses 10 categories for article classification and user preferences:
 
 ---
 
+## 🔗 Key Code References
+
+### Core Algorithms
+
+| Algorithm | File | Description |
+|-----------|------|-------------|
+| **K-Means Clustering** | [`scripts/daily_cluster.py#L139-L145`](scripts/daily_cluster.py#L139-L145) | Groups similar articles by category vectors for synthesis. Uses `sklearn.KMeans` to cluster articles before LLM combination. |
+| **Cosine Distance Ranking** | [`app/services/feed_service.py#L112-L141`](app/services/feed_service.py#L112-L141) | Ranks articles using pgvector's `cosine_distance()` between user preference vector and article category scores. |
+| **Preference Learning** | [`app/services/feedback_service.py#L80-L125`](app/services/feedback_service.py#L80-L125) | Updates user preference vector based on interactions. Uses weighted decay: `new_pref = α × current_pref + (1-α) × article_vector` |
+| **Summary Validation Loop** | [`app/services/nlp_service.py#L62-L137`](app/services/nlp_service.py#L62-L137) | 3-attempt retry loop with JSON validation for LLM summary generation. |
+| **LLM Output Validation** | [`app/services/llm_validator.py#L1-L209`](app/services/llm_validator.py#L1-L209) | Validates LLM JSON responses against expected schema (categories, content types, scores). |
+
+### LLM Model Definitions
+
+| Model | File | Purpose |
+|-------|------|---------|
+| **Article Classifier** | [`scripts/init/ollama-models/news-cls-modfile`](scripts/init/ollama-models/news-cls-modfile) | System prompt for classifying articles into 10 categories with normalized scores summing to 5.0. |
+| **Article Combiner** | [`scripts/init/ollama-models/news-combiner-modfile`](scripts/init/ollama-models/news-combiner-modfile) | Synthesizes multiple articles into one unified piece. Includes topic matching rules to decide which articles to combine. |
+| **Daily Summarizer** | [`scripts/init/ollama-models/news-summarizer-modfile`](scripts/init/ollama-models/news-summarizer-modfile) | Generates personalized daily summaries with user preference integration. |
+
+### Database Models & Vectors
+
+| Component | File | Description |
+|-----------|------|-------------|
+| **User Preferences Vector** | [`app/models/user.py#L15`](app/models/user.py#L15) | 10-dimensional pgvector for category preferences. |
+| **Article Category Scores** | [`app/models/article.py`](app/models/article.py) | 10-dimensional pgvector for article classification. |
+| **Synthesized Article** | [`app/models/synthesized_article.py`](app/models/synthesized_article.py) | LLM-generated combined articles with source tracking. |
+| **User Interactions** | [`app/models/interaction.py`](app/models/interaction.py) | Tracks likes/dislikes for preference learning. |
+
+### Key Services
+
+| Service | File | Responsibility |
+|---------|------|----------------|
+| **Feed Service** | [`app/services/feed_service.py`](app/services/feed_service.py) | Personalized feed generation using vector similarity. |
+| **Feedback Service** | [`app/services/feedback_service.py`](app/services/feedback_service.py) | Preference vector updates from user interactions. |
+| **NLP Service** | [`app/services/nlp_service.py`](app/services/nlp_service.py) | Ollama LLM integration for classification and summarization. |
+| **Summary Service** | [`app/services/summary_service.py`](app/services/summary_service.py) | Daily summary generation with status tracking. |
+| **Scheduler** | [`app/services/scheduler.py`](app/services/scheduler.py) | APScheduler jobs for ingestion (06:00/18:00 UTC) and clustering. |
+
+### Background Jobs
+
+| Job | File | Schedule |
+|-----|------|----------|
+| **Daily Ingestion** | [`scripts/daily_ingest.py`](scripts/daily_ingest.py) | Scheduled via [`app/services/scheduler.py#L100-L109`](app/services/scheduler.py#L100-L109) at 06:00 and 18:00 UTC. |
+| **Daily Clustering** | [`scripts/daily_cluster.py`](scripts/daily_cluster.py) | Runs after ingestion completes. Groups and synthesizes articles. |
+
+---
+
 ## 🧪 Testing
 
 ```bash

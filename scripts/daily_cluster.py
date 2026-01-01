@@ -64,26 +64,36 @@ class ClusterService:
                 print("No articles found. Exiting.")
                 return
 
-            # 2. Cluster articles
+            # 2. Filter out articles that have already been used in synthesized articles
+            existing_sources_result = await db.execute(
+                select(SynthesizedSource.article_id).distinct()
+            )
+            already_synthesized_ids = set(row[0] for row in existing_sources_result.fetchall())
+            
+            # Filter to only new articles
+            new_articles = [a for a in articles if a.id not in already_synthesized_ids]
+            print(f"After deduplication: {len(new_articles)} new articles (excluded {len(articles) - len(new_articles)} already synthesized).")
+
+            if not new_articles:
+                print("All articles have already been synthesized. Exiting.")
+                return
+
+            # 3. Cluster articles
             start_cluster = datetime.now()
             # We want groups of roughly 5 articles
-            groups = self.group_articles_by_size(articles, num=5)
+            groups = self.group_articles_by_size(new_articles, num=5)
             cluster_duration = (datetime.now() - start_cluster).total_seconds()
             print(f"Created {len(groups)} clusters in {cluster_duration:.2f} seconds.")
 
-            # 3. Process each group
+            # 4. Process each group
             for i, group_ids in enumerate(groups):
                 print(f"Processing cluster {i+1}/{len(groups)} with {len(group_ids)} articles.")
 
                 # Fetch full article objects for the group and sort by published_at desc
-                # We already have them in 'articles' list, but let's filter and sort
-                group_articles = [a for a in articles if a.id in group_ids]
+                group_articles = [a for a in new_articles if a.id in group_ids]
                 group_articles.sort(key=lambda x: x.published_at or datetime.min, reverse=True)
 
-                # Take top 5 most current (though clustering logic already chunked them,
-                # user said "the articles running through the llm should be the most current ones in each cluster")
-                # If the cluster is larger than 5 (which shouldn't happen with the chunking logic unless we change it),
-                # we take top 5. The chunking logic in test/cluster.py forces chunks of size `num`, so this is redundant but safe.
+                # Take top 5 most current
                 target_articles = group_articles[:5]
 
                 if not target_articles:
@@ -221,6 +231,8 @@ Return ONLY the JSON object.
         try:
             generated_article = result.get("generated_article")
             analysis = result.get("analysis")
+            combined_indices = result.get("combined_indices", [])
+            articles_combined = result.get("articles_combined", len(source_articles))
 
             if not generated_article or not analysis:
                 self.logger.error("Missing generated_article or analysis in result.")
@@ -257,11 +269,31 @@ Return ONLY the JSON object.
                 "Emotional": get_score("Emotional")
             }
 
+            # Determine which articles to link based on combined_indices
+            # combined_indices are 1-based indices from the LLM
+            if combined_indices and len(combined_indices) > 0:
+                # Convert 1-based indices to 0-based and filter valid ones
+                linked_articles = []
+                for idx in combined_indices:
+                    zero_idx = idx - 1  # Convert to 0-based
+                    if 0 <= zero_idx < len(source_articles):
+                        linked_articles.append(source_articles[zero_idx])
+                self.logger.info(f"LLM combined {articles_combined} articles (indices: {combined_indices})")
+            else:
+                # Fallback: link all source articles
+                linked_articles = source_articles
+                self.logger.info(f"No combined_indices provided, linking all {len(source_articles)} source articles")
+
+            # Get image from the first linked article
+            image_url = None
+            if linked_articles and hasattr(linked_articles[0], 'image_url'):
+                image_url = linked_articles[0].image_url
+
             # Create SynthesizedArticle
             synth = SynthesizedArticle(
                 title=result.get("title", "Combined News"),
                 content=generated_article,
-                image_url=source_articles[0].image_url if source_articles and hasattr(source_articles[0], 'image_url') else None,
+                image_url=image_url,
                 generation_prompt=prompt,
                 analysis=analysis,
                 category_scores=category_scores,
@@ -270,8 +302,8 @@ Return ONLY the JSON object.
             db.add(synth)
             await db.flush() # Get ID
 
-            # Link sources
-            for article in source_articles:
+            # Link only the articles that were actually combined
+            for article in linked_articles:
                 source = SynthesizedSource(
                     synthesized_id=synth.id,
                     article_id=article.id
@@ -279,7 +311,7 @@ Return ONLY the JSON object.
                 db.add(source)
 
             await db.commit()
-            self.logger.info(f"Saved synthesized article {synth.id}")
+            self.logger.info(f"Saved synthesized article {synth.id} with {len(linked_articles)} source links")
 
         except Exception as e:
             self.logger.error(f"Error saving synthesized article: {e}")
