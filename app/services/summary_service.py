@@ -12,7 +12,7 @@ from app.services.nlp_service import NLPService
 import logging
 logger = logging.getLogger(__name__)
 
-# TODO: remove if not used or implement
+
 class SummaryService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -21,14 +21,8 @@ class SummaryService:
 
     async def get_daily_summary(self, user_id: str) -> Optional[DailySummary]:
         logger.info(f"Checking daily summary for user {user_id}")
-        # Check if summary exists for today
         today = date.today()
-        # Note: summary_generated_at is timestamp, we need to check date part.
-        # SQLite/Postgres specific date truncation might be needed.
-        # For simplicity, let's just check if we have one generated > today midnight.
 
-        # Postgres: func.date(DailySummary.summary_generated_at) == today
-        # We now have a 'date' column
         stmt = select(DailySummary).where(
             DailySummary.user_id == user_id,
             func.date(DailySummary.date) == today
@@ -59,7 +53,6 @@ class SummaryService:
         # 2. Summarize
         from app.services.user_service import UserService
         user_service = UserService(self.db)
-        # Fetch actual preferences to pass to the model
         _, preferences_meta = await user_service.get_user_preferences(user_id)
 
         summary_json = await self.nlp_service.summarize_articles(article_texts, preferences_meta)

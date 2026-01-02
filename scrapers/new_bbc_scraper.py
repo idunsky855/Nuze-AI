@@ -61,8 +61,7 @@ class BBCScraper(BaseScraper):
                     soup = BeautifulSoup(html, 'html.parser')
 
                     if category == "sport":
-                        # Specific logic for sport if needed, or generic
-                        # The original scraper had specific logic for sport
+                        # Sport pages have different promo structure
                         promo_blocks = soup.find_all('div', attrs={'data-testid': 'promo', 'type': 'article'})
                         for promo in promo_blocks:
                             a_tag = promo.find('a', href=True)
@@ -70,8 +69,7 @@ class BBCScraper(BaseScraper):
                                 full_url = self._make_absolute(a_tag['href'])
                                 urls.append(full_url)
 
-                    # Generic logic for others (and maybe sport too if it shares structure now)
-                    # Original scraper used data-testid="internal-link"
+                    # Standard article links
                     a_tags = soup.find_all('a', attrs={'data-testid': 'internal-link'})
                     for a in a_tags:
                         href = a.get('href')
@@ -123,7 +121,6 @@ class BBCScraper(BaseScraper):
                         "title": title,
                         "summary": summary,
                         "content": content,
-                        "published_at": timestamp,
                         "published_at": timestamp,
                         "image_url": image_url,
                         "source": "BBC",

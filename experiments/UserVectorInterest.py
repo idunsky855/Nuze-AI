@@ -6,7 +6,6 @@ from rich import print
 import pandas as pd
 from scipy.stats import pearsonr
 
-# random.seed(42)
 
 #####################################################################################################################################
 ##                                                                  PLOTING                                                        ##
@@ -213,8 +212,6 @@ def update_user_vector(user_vector: np.array, article: Article, step=None, learn
     # *Median deviation shape similarity
     sigmoid_like_prob = sigmoid(sim)        
     like_prob = sigmoid_like_prob
-    
-    # print(f"{article.get_name()} prob: {None}, sim: {sim}")
     
     if is_liked(like_prob):
         liked_count += 1

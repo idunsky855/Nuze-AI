@@ -64,7 +64,6 @@ class FeedbackService:
     async def update_preferences_from_article(self, user_id: str, article_id: str, is_liked: bool | None, article_obj=None):
         # Get article vector if we don't have object
         if not article_obj:
-             # Try synth
              stmt = select(SynthesizedArticle).where(SynthesizedArticle.id == article_id)
              res = await self.db.execute(stmt)
              article_obj = res.scalar_one_or_none()
@@ -86,15 +85,11 @@ class FeedbackService:
         user_cat_list, user_meta_dict = await self.user_service.get_user_preferences(user_id)
 
         if not user_cat_list:
-            # Initialize with article vector (rescaled categories, raw metadata)
-            # Replicate initialization logic:
-            # Categories: Normalize to 5.0
+            # Initialize with article vector
             new_cat_vec = self._rescale_and_normalize_vector(article_cat_vec)
-            # Metadata: Keep as is (Assuming article metadata is valid reference point)
             new_meta_vec = article_meta_vec
 
             new_full_vec = np.concatenate([new_cat_vec, new_meta_vec])
-             # Actually we only need to save, not run update math
         else:
             user_cat_vec = np.array(user_cat_list)
             # Use defaults if user has no metadata yet (e.g. legacy user)
@@ -103,20 +98,16 @@ class FeedbackService:
 
             user_full_vec = np.concatenate([user_cat_vec, user_meta_vec])
 
-            # 3. Calculate Update on Full Vector
-            # updated_vec is raw (not normalized)
+            # Calculate Update on Full Vector
             updated_full_vec = self._calculate_update(user_full_vec, article_full_vec, is_liked)
 
-            # 4. Split and Normalize/Clip
-            # Split back to 10 and 5
+            # Split and Normalize/Clip
             new_cat_vec = updated_full_vec[:10]
             new_meta_vec = updated_full_vec[10:]
 
-            # Normalize Categories
             new_cat_vec = self._rescale_and_normalize_vector(new_cat_vec)
 
         # Clip Metadata (0-1)
-        # Note: If we entered 'if not user_cat_list' branch, new_meta_vec is defined there too.
         new_meta_vec = np.clip(new_meta_vec, 0.0, 1.0)
 
         # Convert back to dict

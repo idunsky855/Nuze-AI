@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 import feedparser
 from bs4 import BeautifulSoup
-from bs4 import BeautifulSoup
 import sys
 import os
 

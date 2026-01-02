@@ -26,10 +26,7 @@ class NYTimesScraper(BaseScraper):
 
     async def scrape(self) -> List[Dict[str, Any]]:
         print("Starting NYT scrape (Selenium)...")
-        # Since Selenium is synchronous and heavy, we run it in a thread pool executor
-        # to avoid blocking the async event loop if this were part of a larger async app.
-        # However, for simplicity here we can just run it.
-
+        # Run Selenium in a thread pool to avoid blocking the async event loop
         loop = asyncio.get_event_loop()
         articles_data = await loop.run_in_executor(None, self._run_selenium_scrape)
 
@@ -102,16 +99,8 @@ class NYTimesScraper(BaseScraper):
         date_str = date_span.get_text(strip=True) if date_span else None
         timestamp = self._parse_date(date_str)
 
-        # Image
+        # Image (not available from section listing)
         image_url = None
-        # Assuming og:image might be present in the section_soup for the main page,
-        # or if it's meant to be extracted from the individual article page,
-        # this logic would need to be moved to a separate fetch for the article.
-        # For now, we'll use the provided 'soup' (renamed to section_soup)
-        # but note this might not yield article-specific images.
-        og_image = section_soup.find('meta', property='og:image')
-        if og_image:
-            image_url = og_image.get('content')
 
         return {
             "url": full_link,
@@ -120,7 +109,7 @@ class NYTimesScraper(BaseScraper):
             "content": content,
             "published_at": timestamp,
             "image_url": image_url,
-            "source": "NYTimes", # Changed from "NYT" to "NYTimes" as per instruction
+            "source": "NYTimes",
             "text_hash": self.compute_hash(content)
         }
 

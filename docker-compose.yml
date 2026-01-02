@@ -2,6 +2,7 @@ services:
   backend:
     build: . # Build the image from the Dockerfile in the current directory
     container_name: fastapi_backend
+    restart: unless-stopped
     ports:
       - "8000:8000" # Map host port 8000 to container port 8000
     volumes:
@@ -22,6 +23,7 @@ services:
       args:
         VITE_API_URL: https://api.nuze.dpdns.org
     container_name: react_frontend
+    restart: unless-stopped
     ports:
       - "5173:80"
     networks:
@@ -29,6 +31,7 @@ services:
   db:
     image: pgvector/pgvector:0.8.0-pg17
     container_name: postgres_pgvector_db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: news_user
       POSTGRES_PASSWORD: 12345678
@@ -49,6 +52,7 @@ services:
   ollama:
     image: ollama/ollama
     container_name: ollama_server
+    restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-// import './App.css'
 import './AppModern.css'
 import Article from './components/Article'
 import SkeletonArticle from './components/SkeletonArticle'
@@ -21,7 +20,6 @@ const ProtectedRoute = ({ isLoggedIn, children }) => {
 }
 
 function App() {
-  console.log('App rendering');
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
@@ -53,19 +51,14 @@ function App() {
   // Daily Summary Generation State (Lifted for persistence)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
-  // Initial Mount Effect - Check Token
   useEffect(() => {
-    console.log("App mounted. Checking token...");
     const token = localStorage.getItem('token');
     if (token) {
-      console.log("Token found. Fetching user...");
       fetchCurrentUser()
         .then(user => {
-          console.log("User fetched successfully", user.id);
           setIsLoggedIn(true);
           setCurrentUser(user);
           if (!user.is_onboarded) {
-            console.log("User not onboarded. Redirecting...");
             navigate('/onboarding');
           }
         })
@@ -74,7 +67,6 @@ function App() {
           handleLogout();
         });
     } else {
-      console.log("No token found.");
       setLoading(false);
     }
   }, []);
@@ -165,18 +157,7 @@ function App() {
         setShowPreferenceToast(false);
       }
 
-      // Update last scroll position (debounce or use interval if needed, but simple assignment is okay here)
-      // Actually, we want to track delta relative to when the toast appeared?
-      // No, just relative to last scroll event might be too small?
-      // Wait, scroll event fires rapidly. Delta between events is small.
-      // We need to track delta relative to a start position or accumulate it?
-
-      // Let's compare to lastScrollTop but update lastScrollTop less frequently?
-      // Or simply: check if scrollTop moved significantly since toast appeared?
-      // Too complex for now. Let's strictly check if scrollTop differs from a stored "toastShownAt" position?
-      // For now, let's just use a simpler heuristic: If scroll velocity is high?
-
-      // Alternative: Just hide on ANY scroll > 50px to allow reading adjustment but hide on navigation.
+      // Hide toast on smaller scrolls (> 50px) to allow reading adjustment
       if (showPreferenceToast && scrollDelta > 50) {
         setShowPreferenceToast(false);
       }
@@ -206,15 +187,12 @@ function App() {
 
   const handleLogin = async (email, password) => {
     try {
-      console.log("Handling login...");
       setError(null);
       setLoading(true);
       const data = await login(email, password);
-      console.log("Login successful. Token:", data.access_token ? "Yes" : "No");
       localStorage.setItem('token', data.access_token);
 
       const user = await fetchCurrentUser();
-      console.log("User fetched:", user.id);
       setIsLoggedIn(true);
       setCurrentUser(user);
 
@@ -291,7 +269,6 @@ function App() {
 
 
   const handleLogout = () => {
-    console.log("Logging out...");
     localStorage.removeItem('token');
     setIsLoggedIn(false)
     setCurrentUser(null)
@@ -303,8 +280,6 @@ function App() {
   }
 
   const handleArticleInteraction = useCallback(async (type) => {
-    console.log(`Article interaction: ${type}`);
-
     // Fetch preferences BEFORE the interaction
     try {
       const beforePrefs = await fetchPreferences();

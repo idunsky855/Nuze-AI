@@ -29,7 +29,6 @@ const PreferenceUpdateToast = ({ show, oldPreferences, newPreferences, onClose }
   const newCategories = newPreferences.interests_vector || [];
 
   // Category names for the 10 dimensions
-  // Category names for the 10 dimensions
   const categoryNames = [
     "Politics & Law", "Economy & Business", "Science & Technology",
     "Health & Wellness", "Education & Society", "Culture & Entertainment",
