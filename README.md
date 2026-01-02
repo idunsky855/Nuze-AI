@@ -21,6 +21,30 @@
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/main_feed.png" alt="Nuze Main Feed" width="100%">
+  <br>
+  <em>Personalized News Feed - Your daily digest tailored to your interests</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/article_view.png" alt="Article View" width="100%">
+  <br>
+  <em>AI-Synthesized Article View - Consolidated insights from multiple sources</em>
+</p>
+
+<p align="center" style="display: flex; justify-content: space-between;">
+  <img src="docs/screenshots/daily_summary.png" alt="Daily Summary" width="48%">
+  <img src="docs/screenshots/read_history.png" alt="Reading History" width="48%">
+</p>
+<p align="center">
+  <em>Daily Summaries & Reading History</em>
+</p>
+
+---
+
 ## 🏗️ Architecture
 
 ```mermaid
