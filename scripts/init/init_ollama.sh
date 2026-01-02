@@ -2,12 +2,10 @@
 set -e # Exit immediately if a command exits with a non-zero status.
 
 
-# MODEL_TO_PULL="llama3.2"                # 3 Seconds
-# MODEL_TO_PULL="llama3.1:8b"             # 17 Seconds
-# MODEL_TO_PULL="gpt-oss:latest"
-# MODEL_TO_PULL="deepseek-r1:latest"      # 142 seconds - Didn't work properly
-MODEL_TO_PULL="phi4:latest"               # 10 seconds
-# MODEL_TO_PULL="qwen3:32b"
+# Base models to pull:
+# - phi4: Used for news-classifier and news-combiner
+# - qwen2.5:14b: Used for news-summarizer
+MODELS_TO_PULL="phi4:latest qwen2.5:14b"
 
 echo "Starting Ollama server in background..."
 # Try to locate the ollama binary in PATH, fallback to common locations
@@ -66,16 +64,19 @@ else
   echo "WARNING: nvidia-smi not found - GPU support may not be available"
 fi
 
-# Check if the model exists, pull if not
-echo "Checking for model: $MODEL_TO_PULL"
-# Use grep -q for quiet check, exit code 0 if found, 1 if not
-if ! "$OLLAMA_BIN" list | grep -q "^${MODEL_TO_PULL}"; then
-  echo "Model not found. Pulling $MODEL_TO_PULL..."
-  "$OLLAMA_BIN" pull "$MODEL_TO_PULL"
-  echo "Model pull finished."
-else
-  echo "Model $MODEL_TO_PULL already exists."
-fi
+# Check and pull each required model
+echo "Checking and pulling required models: $MODELS_TO_PULL"
+for MODEL_TO_PULL in $MODELS_TO_PULL; do
+  echo "Checking for model: $MODEL_TO_PULL"
+  # Use grep -q for quiet check, exit code 0 if found, 1 if not
+  if ! "$OLLAMA_BIN" list | grep -q "^${MODEL_TO_PULL%%:*}"; then
+    echo "Model not found. Pulling $MODEL_TO_PULL..."
+    "$OLLAMA_BIN" pull "$MODEL_TO_PULL"
+    echo "Model pull finished for $MODEL_TO_PULL."
+  else
+    echo "Model $MODEL_TO_PULL already exists."
+  fi
+done
 
   # Optional: if a Modfile is mounted at /Modfile, attempt to build or extract its SYSTEM prompt
   if [ -f /news-cls-modfile ]; then

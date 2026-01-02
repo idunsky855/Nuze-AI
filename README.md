@@ -147,11 +147,11 @@ nuze-backend/
 
 ### 🌐 Live Demo
 
-The application is already deployed and running at **[client.nuze.dpdns.org](https://client.nuze.dpdns.org)**.
+The application is already deployed and running at **[nuze.dpdns.org](https://nuze.dpdns.org)**.
 
 ### Prerequisites
 - Docker & Docker Compose
-- NVIDIA GPU (for Ollama, optional but recommended)
+- NVIDIA GPU with atleast 24GB VRAM (for Ollama)
 
 ### 1. Clone & Install
 
@@ -170,7 +170,7 @@ The application can run in two modes:
 | **Development** | `./run-dev.sh` | Connects to local backend (`localhost:8000`) with hot reload. Use this for frontend development and testing. |
 
 > [!IMPORTANT]
-> To communicate with the actual server and database, run **production mode** (`./run-prod.sh`).
+> To communicate with the actual published server and database that we are running, run **production mode** (`./run-prod.sh`).
 > Development mode uses a local backend and is intended for local development only.
 
 ```bash
@@ -192,7 +192,7 @@ The application can run in two modes:
 
 When running in development mode, on first run the system will:
 1. Initialize PostgreSQL with pgvector extension
-2. Pull and configure Ollama models (phi4 base + custom models)
+2. Pull and configure Ollama models (phi4 and Qwen2.5 base models + custom models)
 3. Create database tables via SQLAlchemy
 
 ---
@@ -260,11 +260,11 @@ The system uses 10 categories for article classification and user preferences:
 
 | Algorithm | File | Description |
 |-----------|------|-------------|
-| **K-Means Clustering** | [`scripts/daily_cluster.py#L139-L145`](scripts/daily_cluster.py#L139-L145) | Groups similar articles by category vectors for synthesis. Uses `sklearn.KMeans` to cluster articles before LLM combination. |
-| **Cosine Distance Ranking** | [`app/services/feed_service.py#L112-L141`](app/services/feed_service.py#L112-L141) | Ranks articles using pgvector's `cosine_distance()` between user preference vector and article category scores. |
-| **Preference Learning** | [`app/services/feedback_service.py#L80-L125`](app/services/feedback_service.py#L80-L125) | Updates user preference vector based on interactions. Uses weighted decay: `new_pref = α × current_pref + (1-α) × article_vector` |
-| **Summary Validation Loop** | [`app/services/nlp_service.py#L62-L137`](app/services/nlp_service.py#L62-L137) | 3-attempt retry loop with JSON validation for LLM summary generation. |
-| **LLM Output Validation** | [`app/services/llm_validator.py#L1-L209`](app/services/llm_validator.py#L1-L209) | Validates LLM JSON responses against expected schema (categories, content types, scores). |
+| **K-Means Clustering** | [`scripts/daily_cluster.py#L149-L155`](scripts/daily_cluster.py#L149-L155) | Groups similar articles by category vectors for synthesis. Uses `sklearn.KMeans` to cluster articles before LLM combination. |
+| **Cosine Distance Ranking** | [`app/services/feed_service.py#L132-L142`](app/services/feed_service.py#L132-L142) | Ranks articles using pgvector's `cosine_distance()` between user preference vector and article category scores. |
+| **Preference Learning** | [`app/services/feedback_service.py#L146-L186`](app/services/feedback_service.py#L146-L186) | Updates user preference vector based on interactions. Uses weighted decay: `new_pref = α × current_pref + (1-α) × article_vector` |
+| **Summary Validation Loop** | [`app/services/nlp_service.py#L103-L137`](app/services/nlp_service.py#L103-L137) | 3-attempt retry loop with JSON validation for LLM summary generation. |
+| **LLM Output Validation** | [`app/services/llm_validator.py#L1-L215`](app/services/llm_validator.py#L1-L215) | Validates LLM JSON responses against expected schema (categories, content types, scores). |
 
 ### LLM Model Definitions
 
@@ -278,7 +278,7 @@ The system uses 10 categories for article classification and user preferences:
 
 | Component | File | Description |
 |-----------|------|-------------|
-| **User Preferences Vector** | [`app/models/user.py#L15`](app/models/user.py#L15) | 10-dimensional pgvector for category preferences. |
+| **User Preferences Vector** | [`app/models/user.py#L20`](app/models/user.py#L20) | 10-dimensional pgvector for category preferences. |
 | **Article Category Scores** | [`app/models/article.py`](app/models/article.py) | 10-dimensional pgvector for article classification. |
 | **Synthesized Article** | [`app/models/synthesized_article.py`](app/models/synthesized_article.py) | LLM-generated combined articles with source tracking. |
 | **User Interactions** | [`app/models/interaction.py`](app/models/interaction.py) | Tracks likes/dislikes for preference learning. |
@@ -297,7 +297,7 @@ The system uses 10 categories for article classification and user preferences:
 
 | Job | File | Schedule |
 |-----|------|----------|
-| **Daily Ingestion** | [`scripts/daily_ingest.py`](scripts/daily_ingest.py) | Scheduled via [`app/services/scheduler.py#L100-L109`](app/services/scheduler.py#L100-L109) at 06:00 and 18:00 UTC. |
+| **Daily Ingestion** | [`scripts/daily_ingest.py`](scripts/daily_ingest.py) | Scheduled via [`app/services/scheduler.py#L100-L110`](app/services/scheduler.py#L100-L110) at 06:00 and 18:00 UTC. |
 | **Daily Clustering** | [`scripts/daily_cluster.py`](scripts/daily_cluster.py) | Runs after ingestion completes. Groups and synthesizes articles. |
 
 ---

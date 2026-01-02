@@ -39,27 +39,48 @@ class IngestionService:
         start_total = datetime.now()
         logger.info(f"Starting daily ingestion (Dry Run: {dry_run})...")
 
+        # Step 1: Collect all articles from all scrapers
+        all_articles = []
         for scraper in self.scrapers:
             try:
                 start_scrape = datetime.now()
                 articles = await scraper.scrape()
                 scrape_duration = (datetime.now() - start_scrape).total_seconds()
                 logger.info(f"Scraped {len(articles)} articles from {scraper.__class__.__name__} in {scrape_duration:.2f} seconds")
-
-                start_process = datetime.now()
-                for article_data in articles:
-                    await self.process_article(article_data, dry_run=dry_run)
-                process_duration = (datetime.now() - start_process).total_seconds()
-                logger.info(f"Processed {len(articles)} articles from {scraper.__class__.__name__} in {process_duration:.2f} seconds")
-
+                all_articles.extend(articles)
             except Exception as e:
                 logger.error(f"Error running scraper {scraper.__class__.__name__}: {e}")
                 logger.debug(traceback.format_exc())
 
+        logger.info(f"Total scraped articles from all sources: {len(all_articles)}")
+
+        # Step 2: Batch check for duplicates (single DB query)
+        all_urls = [a.get('url') for a in all_articles if a.get('url')]
+        existing_urls = set()
+        
+        if not dry_run and all_urls:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(
+                    select(Article.source_url).where(Article.source_url.in_(all_urls))
+                )
+                existing_urls = set(result.scalars().all())
+            logger.info(f"Found {len(existing_urls)} existing articles in database (skipping duplicates)")
+
+        # Step 3: Filter to only new articles
+        new_articles = [a for a in all_articles if a.get('url') not in existing_urls]
+        logger.info(f"Processing {len(new_articles)} new articles")
+
+        # Step 4: Process only new articles
+        start_process = datetime.now()
+        for article_data in new_articles:
+            await self.process_article(article_data, dry_run=dry_run, skip_dup_check=True)
+        process_duration = (datetime.now() - start_process).total_seconds()
+        logger.info(f"Processed {len(new_articles)} articles in {process_duration:.2f} seconds")
+
         total_duration = (datetime.now() - start_total).total_seconds()
         logger.info(f"Daily ingestion finished in {total_duration:.2f} seconds.")
 
-    async def process_article(self, article_data, dry_run=False):
+    async def process_article(self, article_data, dry_run=False, skip_dup_check=False):
         url = article_data.get('url')
         if not url:
             return
@@ -70,13 +91,14 @@ class IngestionService:
 
         async with AsyncSessionLocal() as db:
             try:
-                # Check for duplicates
-                result = await db.execute(select(Article).where(Article.source_url == url))
-                existing = result.scalars().first()
+                # Check for duplicates (skip if already batch-checked)
+                if not skip_dup_check:
+                    result = await db.execute(select(Article).where(Article.source_url == url))
+                    existing = result.scalars().first()
 
-                if existing:
-                    logger.info(f"Skipping duplicate: {url}")
-                    return
+                    if existing:
+                        logger.info(f"Skipping duplicate: {url}")
+                        return
 
                 logger.info(f"Ingesting: {url}")
 
