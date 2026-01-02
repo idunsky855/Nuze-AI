@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
-from bs4 import BeautifulSoup
 import sys
 import os
 

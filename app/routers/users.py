@@ -47,29 +47,13 @@ async def update_preferences(
         raise HTTPException(status_code=400, detail="No preferences provided")
 
     user_service = UserService(db)
-    # We need current prefs if we are only updating metadata?
-    # Service update_user_preferences replaces vector.
-    # If interests_vector is None, `update_user_preferences` might error or overwrite with None?
-    # Schema says Optional.
-    # Logic in service: user.preferences = preferences.
-    # If I pass None, it saves None? Wait, service definition type hint list[float].
-    # I should check service again.
-
     current_prefs, current_meta = await user_service.get_user_preferences(user_id)
 
+    # Use provided values or fall back to current values
     new_vector = prefs_in.interests_vector if prefs_in.interests_vector is not None else current_prefs
     new_metadata = prefs_in.metadata if prefs_in.metadata is not None else current_meta
 
     updated_prefs = await user_service.update_user_preferences(user_id, new_vector, new_metadata)
-
-    # Return updated state
-    # update_user_preferences returns vector list.
-    # I should fetch fresh or just return what we have.
-    # But update_user_preferences modifies the object in session.
-    # Let's re-fetch or assume successful update.
-    # Actually service returns `list(user.preferences)`.
-    # It doesn't return metadata.
-    # So I will construct response manually from inputs/current state.
 
     return {"interests_vector": updated_prefs, "metadata": new_metadata}
 

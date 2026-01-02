@@ -52,7 +52,6 @@ class FeedService:
 
         # Determine buckets (BUCKET_SIZE = 10 from experiment)
         BUCKET_SIZE = 10
-        # RANDOMNESS_PROBS = [0.75, 0.20, 0.05]
 
         best = list(ordered_articles[:BUCKET_SIZE]) # Top 10
         mid = list(ordered_articles[BUCKET_SIZE:2*BUCKET_SIZE]) # Next 10
@@ -84,14 +83,14 @@ class FeedService:
                 else: pool = rest
             elif target_pool == "mid":
                 if mid: pool = mid
-                elif best: pool = best # better fallback than rest?
+                elif best: pool = best
                 else: pool = rest
             else: # rest
                 if rest: pool = rest
                 elif mid: pool = mid
                 else: pool = best
 
-            # Final sanity check if specific fallback path failed (e.g. target mid, mid empty, best empty -> only rest)
+            # Fallback if target pool is empty
             if not pool:
                 if best: pool = best
                 elif mid: pool = mid

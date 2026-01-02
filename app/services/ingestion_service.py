@@ -161,8 +161,6 @@ class IngestionService:
             return None
 
         try:
-            # Truncate text if too long for context window (simple heuristic)
-            # truncated_text = text[:4000]
             prompt = self.PROMPT_TEMPLATE.replace("{article_text}", text)
 
             response = self.client.chat(
@@ -188,7 +186,7 @@ class IngestionService:
 
             result = json.loads(cleaned)
 
-            # Normalize as per test script
+            # Normalize category structure if nested
             if "category" in result and isinstance(result["category"], dict):
                 for k, v in result["category"].items():
                     result[k] = v
@@ -215,7 +213,7 @@ class IngestionService:
 
         total = sum(scores)
         if total > 0 and abs(total - 5.0) > 0.01:
-            scores = [round(s * 5.0 / total, 4) for s in scores]  # keep more precision
+            scores = [round(s * 5.0 / total, 4) for s in scores]
 
         return scores
 

@@ -50,7 +50,6 @@ async def get_feed(
     sources_map = {}
     rows = sources_result.all()
 
-    # Debug: Print available keys in map
     for synth_source, source_article in rows:
         # Use string representation of UUID for reliable lookup
         sid = str(synth_source.synthesized_id)

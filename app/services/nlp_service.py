@@ -63,7 +63,6 @@ class NLPService:
             # Return zero vector on error
             return [0.0] * 10
 
-    # TODO: remove if not used
     async def summarize_articles(self, articles_text: List[str], user_preferences: dict = None) -> str:
         """
         Summarizes a list of articles using the news-summarizer model.

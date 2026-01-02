@@ -45,7 +45,6 @@ export const fetchReadHistory = async (skip = 0, limit = 20) => {
 
 export const recordInteraction = async (articleId, type) => {
     await axios.post(`${API_URL}/interactions`, { articleId, type }, { headers: getAuthHeader() });
-    console.log(`Interaction recorded: ${type} on article ${articleId}`);
     return Promise.resolve();
 };
 

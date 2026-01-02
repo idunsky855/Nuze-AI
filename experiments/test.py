@@ -533,7 +533,6 @@ if __name__ == "__main__":
     
 
     print(interaction_display.round(2))
-    # print(interaction)
     
     # Interactive plot with article vector points overlay and like status as stars
     import matplotlib.pyplot as plt

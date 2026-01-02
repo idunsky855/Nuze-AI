@@ -260,10 +260,10 @@ The system uses 10 categories for article classification and user preferences:
 
 | Algorithm | File | Description |
 |-----------|------|-------------|
-| **K-Means Clustering** | [`scripts/daily_cluster.py#L149-L155`](scripts/daily_cluster.py#L149-L155) | Groups similar articles by category vectors for synthesis. Uses `sklearn.KMeans` to cluster articles before LLM combination. |
-| **Cosine Distance Ranking** | [`app/services/feed_service.py#L132-L142`](app/services/feed_service.py#L132-L142) | Ranks articles using pgvector's `cosine_distance()` between user preference vector and article category scores. |
-| **Preference Learning** | [`app/services/feedback_service.py#L146-L186`](app/services/feedback_service.py#L146-L186) | Updates user preference vector based on interactions. Uses weighted decay: `new_pref = α × current_pref + (1-α) × article_vector` |
-| **Summary Validation Loop** | [`app/services/nlp_service.py#L103-L137`](app/services/nlp_service.py#L103-L137) | 3-attempt retry loop with JSON validation for LLM summary generation. |
+| **K-Means Clustering** | [`scripts/daily_cluster.py#L148-L154`](scripts/daily_cluster.py#L148-L154) | Groups similar articles by category vectors for synthesis. Uses `sklearn.KMeans` to cluster articles before LLM combination. |
+| **Cosine Distance Ranking** | [`app/services/feed_service.py#L132-L141`](app/services/feed_service.py#L132-L141) | Ranks articles using pgvector's `cosine_distance()` between user preference vector and article category scores. |
+| **Preference Learning** | [`app/services/feedback_service.py#L137-L178`](app/services/feedback_service.py#L137-L178) | Updates user preference vector based on interactions. Uses weighted decay: `new_pref = α × current_pref + (1-α) × article_vector` |
+| **Summary Validation Loop** | [`app/services/nlp_service.py#L102-L137`](app/services/nlp_service.py#L102-L137) | 3-attempt retry loop with JSON validation for LLM summary generation. |
 | **LLM Output Validation** | [`app/services/llm_validator.py#L1-L215`](app/services/llm_validator.py#L1-L215) | Validates LLM JSON responses against expected schema (categories, content types, scores). |
 
 ### LLM Model Definitions

@@ -29,9 +29,8 @@ class ClusterService:
 
     async def run_daily_clustering(self):
         start_total = datetime.now()
-        print("Starting daily clustering...")
+        self.logger.info("Starting daily clustering...")
         async with AsyncSessionLocal() as db:
-            # 1. Fetch articles from the last 24 hours
             # 1. Fetch articles from the last 24 hours relative to the latest article
             # First, get the latest article date
             latest_article_result = await db.execute(
@@ -43,11 +42,11 @@ class ClusterService:
             latest_date = latest_article_result.scalar_one_or_none()
 
             if not latest_date:
-                print("No articles found in database. Exiting.")
+                self.logger.info("No articles found in database. Exiting.")
                 return
 
             cutoff = latest_date - timedelta(hours=24)
-            print(f"Latest article date: {latest_date}. Fetching articles since {cutoff}...")
+            self.logger.info(f"Latest article date: {latest_date}. Fetching articles since {cutoff}...")
 
             # Ensure we only fetch articles that have category scores
             result = await db.execute(
@@ -58,10 +57,10 @@ class ClusterService:
                 )
             )
             articles = result.scalars().all()
-            print(f"Fetched {len(articles)} articles from the 24h window ending at {latest_date}.")
+            self.logger.info(f"Fetched {len(articles)} articles from the 24h window ending at {latest_date}.")
 
             if not articles:
-                print("No articles found. Exiting.")
+                self.logger.info("No articles found. Exiting.")
                 return
 
             # 2. Filter out articles that have already been used in synthesized articles
@@ -72,10 +71,10 @@ class ClusterService:
             
             # Filter to only new articles
             new_articles = [a for a in articles if a.id not in already_synthesized_ids]
-            print(f"After deduplication: {len(new_articles)} new articles (excluded {len(articles) - len(new_articles)} already synthesized).")
+            self.logger.info(f"After deduplication: {len(new_articles)} new articles (excluded {len(articles) - len(new_articles)} already synthesized).")
 
             if not new_articles:
-                print("All articles have already been synthesized. Exiting.")
+                self.logger.info("All articles have already been synthesized. Exiting.")
                 return
 
             # 3. Cluster articles
@@ -83,11 +82,11 @@ class ClusterService:
             # We want groups of roughly 5 articles
             groups = self.group_articles_by_size(new_articles, num=5)
             cluster_duration = (datetime.now() - start_cluster).total_seconds()
-            print(f"Created {len(groups)} clusters in {cluster_duration:.2f} seconds.")
+            self.logger.info(f"Created {len(groups)} clusters in {cluster_duration:.2f} seconds.")
 
             # 4. Process each group
             for i, group_ids in enumerate(groups):
-                print(f"Processing cluster {i+1}/{len(groups)} with {len(group_ids)} articles.")
+                self.logger.info(f"Processing cluster {i+1}/{len(groups)} with {len(group_ids)} articles.")
 
                 # Fetch full article objects for the group and sort by published_at desc
                 group_articles = [a for a in new_articles if a.id in group_ids]
@@ -102,7 +101,7 @@ class ClusterService:
                 await self.process_cluster(db, target_articles)
 
         total_duration = (datetime.now() - start_total).total_seconds()
-        print(f"Daily clustering finished in {total_duration:.2f} seconds.")
+        self.logger.info(f"Daily clustering finished in {total_duration:.2f} seconds.")
 
     def group_articles_by_size(self, articles: List[Article], num: int, random_state: int = 42) -> List[List[Any]]:
         """
